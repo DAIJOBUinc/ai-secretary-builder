@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI秘書ビルダー（ドット絵ゲーム版）</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231e5ff2'/%3E%3Crect x='3' y='4' width='10' height='9' fill='%23DE886D'/%3E%3Crect x='5' y='6' width='1.5' height='2.5' fill='%23000'/%3E%3Crect x='9.5' y='6' width='1.5' height='2.5' fill='%23000'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 16'%3E%3Crect width='15' height='16' fill='%231e5ff2'/%3E%3Cg fill='%23DE886D'%3E%3Crect x='2' y='6' width='11' height='7'/%3E%3Crect x='0' y='9' width='2' height='2'/%3E%3Crect x='13' y='9' width='2' height='2'/%3E%3Crect x='3' y='13' width='1' height='2'/%3E%3Crect x='5' y='13' width='1' height='2'/%3E%3Crect x='9' y='13' width='1' height='2'/%3E%3Crect x='11' y='13' width='1' height='2'/%3E%3C/g%3E%3Crect x='4' y='8' width='1' height='2' fill='%23000'/%3E%3Crect x='10' y='8' width='1' height='2' fill='%23000'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -141,6 +141,13 @@
   .clear-dl .guidebar{margin-top:10px;}
   .confetti{position:fixed;top:-14px;width:9px;height:9px;z-index:60;pointer-events:none;animation:confall 2.2s ease-in forwards;}
   @keyframes confall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(104vh) rotate(540deg);opacity:.9}}
+  .modal{position:fixed;inset:0;background:rgba(14,42,107,.55);display:flex;align-items:center;justify-content:center;z-index:80;padding:20px;}
+  .modal-box{background:#fff;max-width:420px;width:100%;padding:22px 20px;}
+  .modal-title{font-size:17px;font-weight:800;color:var(--deep);margin-bottom:8px;}
+  .modal-msg{font-size:13px;color:var(--sub);line-height:1.75;margin-bottom:18px;}
+  .modal-btns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+  .modal-btns .danger{background:var(--coral);color:#fff;}
+  .modal-btns .danger:hover{background:#e85555;}
 </style>
 </head>
 <body>
@@ -306,6 +313,17 @@
 
   <section class="panel pbox" data-p="4" id="clearPanel"></section>
   <footer class="foot"><span class="pill">受講者限定</span><span class="pill">無断転載・再配布禁止</span><br>© 2026 DAIJOBU株式会社 — 本ツールは DAIJOBU株式会社 が公開・提供しています。著作権は DAIJOBU株式会社 に帰属します。</footer>
+</div>
+
+<div id="confirmReset" class="modal" style="display:none" onclick="if(event.target===this)closeReset()">
+  <div class="modal-box pbox">
+    <div class="modal-title">本当に最初からやり直しますか？</div>
+    <div class="modal-msg">入力した内容（会社名・お名前・役割・選んだスキル/ツール/権限など）はすべて消えます。この操作は元に戻せません。</div>
+    <div class="modal-btns">
+      <button onclick="closeReset()">キャンセル</button>
+      <button class="danger" onclick="resetAll()">↺ はい、リセットする</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -648,7 +666,7 @@ function showClear(){
     +'<li><b>② 能力</b>：universal＋役割の鉄板スキル・Agent Team</li>'
     +'<li><b>③ 中身</b>：context/ に自社の事実</li></ul></div>';
   h+='<div class="clear-dl"><div class="oh">これで完成です</div>①②③はその場で構築済み。あとは Claude Code で「おはよう」と話しかければ、AI秘書'+nm+'が今日からあなたの仕事を手伝います。</div>';
-  h+='<div class="nav"><button onclick="go(1)">◀ もどって見直す</button><button onclick="resetAll()">↺ もう一度はじめから</button></div>';
+  h+='<div class="nav"><button onclick="go(1)">◀ もどって見直す</button><button onclick="askReset()">↺ もう一度はじめから</button></div>';
   cp.innerHTML=h;
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   cp.classList.add('active');
@@ -657,6 +675,8 @@ function showClear(){
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function resetAll(){try{localStorage.removeItem('aisb_v1');}catch(e){}location.reload();}
+function askReset(){var m=document.getElementById('confirmReset');if(m){m.style.display='flex';navsfx();}}
+function closeReset(){var m=document.getElementById('confirmReset');if(m)m.style.display='none';}
 function saveState(){try{localStorage.setItem('aisb_v1',JSON.stringify({company:state.company,person:state.person,ainame:state.ainame,roles:[...state.roles],otherOn:state.otherOn,otherText:state.otherText,tools:[...state.tools],toolsFree:state.toolsFree,perms:[...state.perms]}));}catch(e){}}
 function loadState(){
   var s;try{s=JSON.parse(localStorage.getItem('aisb_v1')||'null');}catch(e){return;}
