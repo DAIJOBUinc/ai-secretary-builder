@@ -408,6 +408,7 @@ const SPRITES={
   keiri:["        ","  yyyy  "," yydyy  "," ydddy  "," yydyy  "," yydyy  ","  yyyy  ","        "],
   bo:["        ","ddd     ","dyyddddd","dyyyyyyd","dyyyyyyd","dyyyyyyd","dddddddd","        "],
   qa:["  d  d  ","  d  d  ","  dggd  "," dggggd "," dgwggd "," dggggd ","  dddd  ","        "],
+  design:["   rr   ","   dd   ","   bb   ","   bb   ","   bb   ","   dd   ","   ss   ","   k    "],
   other:["        ","   dd   ","   dd   "," dddddd "," dddddd ","   dd   ","   dd   ","        "]
 };
 
@@ -456,7 +457,12 @@ const ROLES={
     tetsuban:[{id:"/interview",desc:"仕様を実装着手前に深掘りしspecへ（手戻り削減）"},{id:"/clip",desc:"技術記事・脆弱性情報を蓄積"},{id:"/daily-log",desc:"コミット・PR・Issue活動を記録"}],
     next:[{id:"テスト系スキル",desc:"仕様書→テスト観点→テストケース（観点マスタに沿う）"}],
     team:{name:"テスト設計チーム",flow:"仕様理解→テスト観点抽出→テストケース生成→レビュー"},
-    docs:[{id:"対象リポジトリ",on:true},{id:"仕様書・要件定義",on:true},{id:"既存のテスト計画・観点表",on:true},{id:"過去のバグ・障害レポート",on:false}]}
+    docs:[{id:"対象リポジトリ",on:true},{id:"仕様書・要件定義",on:true},{id:"既存のテスト計画・観点表",on:true},{id:"過去のバグ・障害レポート",on:false}]},
+  design:{name:"デザイナー",
+    tetsuban:[{id:"/clip",desc:"参考事例・UIトレンド・競合表現の取り込み"},{id:"/interview",desc:"制作依頼のゴール・要件・制約を着手前に深掘りしブリーフへ（手戻り削減）"}],
+    next:[{id:"ブリーフ/指示書ドラフト系",desc:"依頼・FBを指示書に落とす（造形は本人）"},{id:"デザインクリティック系",desc:"案の論点出し・批判レビュー"}],
+    team:{name:"デザイン検討チーム",flow:"参考リサーチ→要件整理→案の論点出し→批判レビュー→まとめ"},
+    docs:[{id:"ブランド・デザインシステムガイド",on:true},{id:"アセット・素材の索引",on:true},{id:"過去の制作物・デザイン判断の記録",on:true},{id:"案件ブリーフ・依頼一覧",on:false}]}
 };
 const TOOLS=[
   {id:"Googleカレンダー（コネクタ）",on:true},{id:"Gmail / メール",on:false},
