@@ -47,14 +47,23 @@
   .banner b{color:var(--blue2);font-weight:700;}
   .banner.notice{background:#fff3f3;border-color:var(--coral);box-shadow:5px 5px 0 var(--coral);}
   .banner.notice b{color:#c0392b;}
+  .banner.resume{background:#eefaf1;border-color:var(--green);box-shadow:5px 5px 0 var(--green);
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .banner.resume b{color:#1f7a44;}
+  .resume-btns{display:flex;gap:7px;flex:none;}
+  .resume-btns button{font-family:inherit;font-weight:800;font-size:12px;padding:6px 11px;border:2px solid var(--dark);
+    background:#fff;color:var(--ink);cursor:pointer;box-shadow:2px 2px 0 var(--dark);}
+  .resume-btns button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--dark);}
   .foot{margin:24px 0 0;padding:14px 4px 0;text-align:center;font-size:11.5px;color:var(--sub);line-height:1.8;border-top:3px dotted var(--grid);}
   .foot .pill{display:inline-block;background:var(--deep);color:#fff;font-weight:700;padding:2px 9px;margin:0 5px 5px 0;font-size:11px;letter-spacing:.5px;}
   .steps{display:flex;gap:8px;margin:16px 0 10px;}
-  .steps .s{flex:1;text-align:center;padding:10px 4px;font-size:14px;font-weight:700;background:var(--white);
+  .steps .s{position:relative;flex:1;text-align:center;padding:10px 4px;font-size:14px;font-weight:700;background:var(--white);
     border:3px solid var(--dark);color:var(--sub);box-shadow:4px 4px 0 var(--dark);cursor:pointer;transition:.06s;}
   .steps .s:hover{transform:translate(-1px,-1px);box-shadow:6px 6px 0 var(--dark);}
   .steps .s.active{background:var(--blue);color:#fff;}
   .steps .s.done{background:var(--yellow);color:var(--deep);}
+  .steps .s.dl::after{content:'\2713 DL';position:absolute;top:-8px;right:-7px;background:var(--green);color:#fff;
+    font-size:9px;font-weight:800;letter-spacing:.5px;padding:2px 5px;border:2px solid var(--dark);line-height:1.1;}
   .steps .s small{display:block;font-size:9px;letter-spacing:1px;color:inherit;opacity:.8;}
   .xp{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:0 0 18px;}
   .xp-track{flex:1;height:16px;background:#d2deff;border:3px solid var(--dark);overflow:hidden;}
@@ -257,6 +266,7 @@
 
   <div class="banner pbox"><b>すすめかた</b>：① えらぶ → <b>その場でじっそう</b>（動くAI秘書ができる）→ <b>講師が概念を説明</b> → ②③へ</div>
   <div class="banner pbox notice"><b>受講者限定ツール</b>：本ツールは DAIJOBU株式会社 が公開・提供する Claude Code 研修の受講者向けです。関係者以外へのURL共有・再配布はご遠慮ください。</div>
+  <div id="resumeBar" class="banner pbox resume" style="display:none"><span><b>続きから再開</b>：前回の入力と進捗（じっそう・DL済み）を復元しました。タブの<b>✓DL</b>でDL済みが分かります。</span><span class="resume-btns"><button onclick="document.getElementById('resumeBar').style.display='none'">閉じる</button><button onclick="askReset()">最初から</button></span></div>
   <details class="demo pbox"><summary>完成イメージを見る（朝、AI秘書はこう動きます）</summary>
     <div class="chat">
       <div class="msg u"><span class="who">あなた</span>おはよう</div>
@@ -466,6 +476,8 @@ const PERMS=[
 const state={company:"",person:"",ainame:"",roles:new Set(),otherOn:false,otherText:"",tools:new Set(),toolsFree:[],perms:new Set(PERMS.filter(p=>p.on).map(p=>p.key)),
   tetsuban:new Set(),next:new Set(),teams:new Set(),docs:new Set()};
 const implemented=new Set();
+const downloaded=new Set();
+function markDL(n){var t=document.querySelector('.steps .s[data-s="'+n+'"]');if(t)t.classList.add('dl');}
 function rnames(){return [...state.roles].map(k=>ROLES[k].name);}
 function otherName(){return state.otherOn&&state.otherText.trim()?state.otherText.trim():'';}
 function allRoleNames(){const a=rnames();if(otherName())a.push(otherName());return a;}
@@ -658,19 +670,22 @@ const LEARN={
   2:'<details class="learn"><summary>▼ 自分で読む（90秒・講師がいなくてもOK）</summary><div class="learn-body"><b>スキル</b>は「/名前」で呼ぶショートカット。frontmatter の description に「どんな時に使うか」を書くと、その場面で自動的に立ち上がります。<b>Gotchas</b> は過去の失敗を1行で残すメモ（同じミスを防ぐ）。<b>Agent Team</b> は重い仕事を複数AIで分担する編成（例：提案書を リサーチ→競合→設計→執筆→レビュー）。まずは単発スキルから、慣れたらチーム。</div></details>',
   3:'<details class="learn"><summary>▼ 自分で読む（90秒・講師がいなくてもOK）</summary><div class="learn-body"><b>context/</b> は自社の事実を入れる場所。ここが埋まるほど、一般論でなく「自社を分かった」回答になります。コツは <b>ストック</b>（今の正しい状態・上書きで最新に）と <b>フロー</b>（議事録やログ・追記でためる）を分けること。最初は事業概要・主要顧客・よく使う書式から。使うほど事実が増えて賢くなります。</div></details>'
 };
-function impl(n){
-  if(!hasRole()){alert('先に①で役割を選んでください。');return;}
+function impl(n,silent){
+  if(!hasRole()){if(silent)return;alert('先に①で役割を選んでください。');return;}
+  var dlLabel=downloaded.has(n)?'⬇ もう一度DL（手順＋決定）':'⬇ 第'+n+'部セットをDL（手順＋決定）';
   let html='<div class="result-block"><div class="rb-h"><span class="badge pixel">第'+n+'部</span>セットができました！DLして Claude Code に渡すだけ</div>'+
     '<p class="hint" style="margin:0 0 10px">「手順（構築指示書）＋あなたの決定」が1つのファイルにまとまっています。Claude Code を開いて、このファイルを渡せばOK。</p>'+
     '<div class="guidebar">'+
-    '<button class="gbtn dl" onclick="downloadBundle('+n+',this)">⬇ 第'+n+'部セットをDL（手順＋決定）</button>'+
+    '<button class="gbtn dl" onclick="downloadBundle('+n+',this)">'+dlLabel+'</button>'+
     '</div></div>';
   if(TEACHER[n]){
     html+='<div class="teacher">'+TEACHER[n]+(LEARN[n]||'')+'</div>';
   }
   const host=document.getElementById('out'+n);host.innerHTML=html;
-  implemented.add(n);updateXP();hop();
+  implemented.add(n);updateXP();
   document.querySelector('.steps .s[data-s="'+n+'"]').classList.add('done');
+  if(silent){saveState();return;}
+  hop();
   if(implemented.size===3){
     showToast('★ ALL CLEAR！');maxSfx();say('ぜんステージ制覇なのだ！！🎉 DLしたら右下の「次へ」で完成画面なのだ');
   } else {
@@ -678,6 +693,7 @@ function impl(n){
     host.insertAdjacentHTML('beforeend','<p class="hint" style="margin:10px 0 0">あと <b>'+miss.join('・')+'</b> を実装するとクリア画面に進めます（上の STAGE タブからも移動できます）。</p>');
     showToast('STAGE '+n+' CLEAR！');clearSfx();say('STAGE'+n+'クリアなのだ！その調子なのだ💪');
   }
+  saveState();
   host.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('show');void t.offsetWidth;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700);}
@@ -692,7 +708,8 @@ async function downloadBundle(n,btn){
   const blob=new Blob([body],{type:'text/markdown;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=PART_NAMES[n]+'_セット.md';
   document.body.appendChild(a);a.click();a.remove();
-  if(btn){var o=btn.textContent;btn.textContent='✓ DLしました';setTimeout(function(){btn.textContent=o;},1600);}
+  downloaded.add(n);markDL(n);saveState();
+  if(btn){btn.textContent='✓ DLしました';setTimeout(function(){btn.textContent='⬇ もう一度DL（手順＋決定）';},1600);}
 }
 function confetti(){const cols=['#1e5ff2','#ffd23f','#3ec46d','#ff6b6b','#9fc0ff','#673AB7'];
   for(let i=0;i<30;i++){const s=document.createElement('div');s.className='confetti';
@@ -729,7 +746,7 @@ function showClear(){
 function resetAll(){try{localStorage.removeItem('aisb_v1');}catch(e){}location.reload();}
 function askReset(){var m=document.getElementById('confirmReset');if(m){m.style.display='flex';navsfx();}}
 function closeReset(){var m=document.getElementById('confirmReset');if(m)m.style.display='none';}
-function saveState(){try{localStorage.setItem('aisb_v1',JSON.stringify({company:state.company,person:state.person,ainame:state.ainame,roles:[...state.roles],otherOn:state.otherOn,otherText:state.otherText,tools:[...state.tools],toolsFree:state.toolsFree,perms:[...state.perms]}));}catch(e){}}
+function saveState(){try{localStorage.setItem('aisb_v1',JSON.stringify({company:state.company,person:state.person,ainame:state.ainame,roles:[...state.roles],otherOn:state.otherOn,otherText:state.otherText,tools:[...state.tools],toolsFree:state.toolsFree,perms:[...state.perms],implemented:[...implemented],downloaded:[...downloaded]}));}catch(e){}}
 function loadState(){
   var s;try{s=JSON.parse(localStorage.getItem('aisb_v1')||'null');}catch(e){return;}
   if(!s)return;
@@ -749,6 +766,12 @@ function loadState(){
   var tf=document.getElementById('toolsFree');if(tf)tf.value=state.toolsFree.join('、');
   if(s.perms){state.perms=new Set(s.perms);document.querySelectorAll('#permList input').forEach(function(cb,i){if(PERMS[i])cb.checked=state.perms.has(PERMS[i].key);});}
   applyRoleDefaults();
+  // 進捗（DL済み）を先に復元 → じっそう結果ブロックを無音で再構築
+  (s.downloaded||[]).forEach(function(n){if(n>=1&&n<=3){downloaded.add(n);markDL(n);}});
+  (s.implemented||[]).forEach(function(n){if(n>=1&&n<=3)impl(n,true);});
+  updateXP();
+  var hadProgress=!!(state.company||state.person||state.ainame||state.roles.size||state.otherOn||state.tools.size||implemented.size||downloaded.size);
+  if(hadProgress){var rb=document.getElementById('resumeBar');if(rb)rb.style.display='flex';}
 }
 document.querySelectorAll('.steps .s').forEach(function(s){s.onclick=function(){go(+s.dataset.s);};s.tabIndex=0;s.setAttribute('role','button');s.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go(+s.dataset.s);}};});
 document.addEventListener('input',saveState);document.addEventListener('change',saveState);
