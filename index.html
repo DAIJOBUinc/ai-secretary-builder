@@ -154,11 +154,16 @@
   .modal-btns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
   .modal-btns .danger{background:var(--coral);color:#fff;}
   .modal-btns .danger:hover{background:#e85555;}
-  .demo{margin:14px 0;padding:12px 14px;font-size:13px;}
-  .demo summary{cursor:pointer;font-weight:800;color:var(--blue2);list-style:none;}
+  .demo{margin:14px 0;padding:0;font-size:13px;overflow:hidden;}
+  .demo summary{cursor:pointer;font-weight:800;color:var(--blue2);list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;background:#eaf1ff;user-select:none;transition:background .12s;}
+  .demo summary:hover{background:#dbe7ff;}
   .demo summary::-webkit-details-marker{display:none;}
-  .demo[open] summary{margin-bottom:10px;}
-  .demo .chat{display:flex;flex-direction:column;gap:8px;}
+  .demo summary::before{content:'▶';font-size:11px;color:var(--blue);transition:transform .15s;flex:none;}
+  .demo summary::after{content:'ひらく';margin-left:auto;font-size:11px;font-weight:800;color:#fff;background:var(--blue);padding:3px 9px;border:2px solid var(--dark);flex:none;}
+  .demo[open] summary{background:#dbe7ff;border-bottom:3px solid var(--dark);}
+  .demo[open] summary::before{transform:rotate(90deg);}
+  .demo[open] summary::after{content:'とじる';background:var(--ink);}
+  .demo .chat{display:flex;flex-direction:column;gap:8px;padding:12px 14px;}
   .demo .msg{max-width:88%;padding:8px 11px;font-size:12.5px;line-height:1.7;border:3px solid var(--dark);}
   .demo .msg.u{align-self:flex-end;background:var(--blue);color:#fff;}
   .demo .msg.a{align-self:flex-start;background:#fff;color:var(--ink);}
@@ -252,7 +257,7 @@
 
   <div class="banner pbox"><b>すすめかた</b>：① えらぶ → <b>その場でじっそう</b>（動くAI秘書ができる）→ <b>講師が概念を説明</b> → ②③へ</div>
   <div class="banner pbox notice"><b>受講者限定ツール</b>：本ツールは DAIJOBU株式会社 が公開・提供する Claude Code 研修の受講者向けです。関係者以外へのURL共有・再配布はご遠慮ください。</div>
-  <details class="demo pbox"><summary>▼ 完成イメージを見る（朝、AI秘書はこう動きます）</summary>
+  <details class="demo pbox"><summary>完成イメージを見る（朝、AI秘書はこう動きます）</summary>
     <div class="chat">
       <div class="msg u"><span class="who">あなた</span>おはよう</div>
       <div class="msg a"><span class="who">AI秘書</span>おはようございます。今日の工程表です。<br>9:00 メール確認 ／ 9:30 A社の商談準備（前回メモ・資料をまとめておきました）／ 11:00 A社 商談 ／ 13:00 見積ドラフト ／ 15:00 1on1の準備。まず 9:30 の商談準備から始めましょう。</div>
@@ -371,6 +376,7 @@ function blip(){ if(muted)return; tone(587,0,0.05); tone(880,0.05,0.07); }
 function tick(){ if(muted)return; tone(720,0,0.03); }
 function navsfx(){ if(muted)return; tone(494,0,0.05); tone(370,0.05,0.06); }
 function clearSfx(){ if(muted)return; [659,784,988,1319].forEach((f,i)=>tone(f,i*0.085,0.16)); }
+function dlSfx(){ if(muted)return; tone(784,0,0.05); tone(988,0.05,0.06); tone(1319,0.11,0.16); }
 function maxSfx(){ if(muted)return; [523,659,784,1047,1319,1047,1568].forEach((f,i)=>tone(f,i*0.1,0.18)); }
 function toggleMute(btn){ muted=!muted; btn.textContent=muted?'🔇':'🔊'; if(!muted)blip(); }
 
@@ -678,6 +684,7 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 const GUIDE_FILES={1:'guide/01_第1部_ガワ_CLAUDEmd構築.md',2:'guide/02_第2部_能力_スキルとエージェント.md',3:'guide/03_第3部_中身_コンテキスト充実.md'};
 const PART_NAMES={1:'第1部_ガワ',2:'第2部_能力',3:'第3部_中身'};
 async function downloadBundle(n,btn){
+  dlSfx(); hop();
   const prompt = n===1?buildP1():n===2?buildP2():buildP3();
   let guide='';
   try{const res=await fetch(GUIDE_FILES[n]);guide=await res.text();}catch(e){guide='（手順ファイル未読込：ホストして同梱してください）';}
