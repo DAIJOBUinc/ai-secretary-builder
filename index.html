@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI秘書ビルダー（ドット絵ゲーム版）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e7eeff; --grid:#d2deff; --white:#ffffff;
+    --blue:#1e5ff2; --blue2:#1646c2; --dark:#0e2a6b; --deep:#0a1f52;
+    --ink:#162a5e; --sub:#4a5f8f; --yellow:#ffd23f; --green:#3ec46d; --coral:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;color:var(--ink);
+    font-family:"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;font-weight:400;
+    line-height:1.75;padding:22px 18px 70px;background-color:var(--bg);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:18px 18px;}
+  .wrap{max-width:760px;margin:0 auto;}
+  .pixel{font-family:"DotGothic16",monospace;}
+  svg{image-rendering:pixelated;shape-rendering:crispEdges;display:block;}
+  .pbox{background:var(--white);border:3px solid var(--dark);box-shadow:5px 5px 0 var(--dark);}
+  header{display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;position:relative;}
+  header .mascot{flex:0 0 auto;line-height:0;}
+  header .mascot svg{overflow:visible;}
+  .mascot.hop{animation:clawd-hop .55s ease;}
+  @keyframes clawd-hop{0%{transform:translateY(0)}28%{transform:translateY(-12px)}52%{transform:translateY(0) scale(1.07,.93)}70%{transform:scale(1)}100%{transform:translateY(0)}}
+  .head-main{flex:1;min-width:0;}
+  header h1{font-family:"Noto Sans JP";font-weight:900;font-size:28px;margin:2px 0 0;color:var(--blue);
+    letter-spacing:1px;line-height:1.2;
+    text-shadow:-2px 0 #fff,2px 0 #fff,0 -2px #fff,0 2px #fff,-2px -2px #fff,2px -2px #fff,-2px 2px #fff,2px 2px #fff,4px 4px 0 var(--dark);}
+  .bubble{position:relative;display:inline-block;margin-top:14px;background:#fff;border:3px solid var(--blue);
+    box-shadow:3px 3px 0 var(--blue);padding:9px 13px;font-size:13px;font-weight:700;color:var(--ink);max-width:100%;}
+  .bubble:before{content:"";position:absolute;left:-13px;top:13px;width:0;height:0;
+    border:7px solid transparent;border-right-color:var(--blue);}
+  .bubble.say{animation:say .25s;}
+  @keyframes say{0%{transform:scale(.93);opacity:.5}100%{transform:scale(1);opacity:1}}
+  .mute{position:absolute;top:0;right:0;padding:7px 10px;font-size:15px;border:3px solid var(--dark);
+    background:#fff;box-shadow:3px 3px 0 var(--dark);cursor:pointer;line-height:1;}
+  .mute:active{transform:translate(3px,3px);box-shadow:none;}
+  .banner{margin:14px 0;padding:12px 14px;font-size:13px;background:#eef3ff;}
+  .banner b{color:var(--blue2);font-weight:700;}
+  .banner.notice{background:#fff3f3;border-color:var(--coral);box-shadow:5px 5px 0 var(--coral);}
+  .banner.notice b{color:#c0392b;}
+  .foot{margin:24px 0 0;padding:14px 4px 0;text-align:center;font-size:11.5px;color:var(--sub);line-height:1.8;border-top:3px dotted var(--grid);}
+  .foot .pill{display:inline-block;background:var(--deep);color:#fff;font-weight:700;padding:2px 9px;margin:0 5px 5px 0;font-size:11px;letter-spacing:.5px;}
+  .steps{display:flex;gap:8px;margin:16px 0 10px;}
+  .steps .s{flex:1;text-align:center;padding:10px 4px;font-size:14px;font-weight:700;background:var(--white);
+    border:3px solid var(--dark);color:var(--sub);box-shadow:4px 4px 0 var(--dark);cursor:pointer;transition:.06s;}
+  .steps .s:hover{transform:translate(-1px,-1px);box-shadow:6px 6px 0 var(--dark);}
+  .steps .s.active{background:var(--blue);color:#fff;}
+  .steps .s.done{background:var(--yellow);color:var(--deep);}
+  .steps .s small{display:block;font-size:9px;letter-spacing:1px;color:inherit;opacity:.8;}
+  .xp{display:flex;align-items:center;gap:10px;padding:8px 12px;margin:0 0 18px;}
+  .xp-track{flex:1;height:16px;background:#d2deff;border:3px solid var(--dark);overflow:hidden;}
+  .xp-fill{height:100%;width:0;background:var(--blue);transition:width .45s steps(6,end);}
+  .xp-label{font-size:11px;color:var(--deep);white-space:nowrap;}
+  .panel{display:none;padding:20px;margin-bottom:18px;}
+  .panel.active{display:block;}
+  .panel h2{font-size:16px;font-weight:800;margin:0 0 6px;color:var(--deep);}
+  .panel .lead{color:var(--sub);font-size:13px;margin:0 0 16px;}
+  label.field{display:block;font-size:13px;font-weight:700;margin:16px 0 6px;color:var(--deep);}
+  input[type=text]{width:100%;padding:11px 12px;border:3px solid var(--dark);font-family:inherit;
+    font-size:14px;background:#fbfdff;margin-bottom:8px;}
+  input[type=text]:focus{outline:none;border-color:var(--blue);box-shadow:3px 3px 0 var(--blue);}
+  .roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+  .role-card{border:3px solid var(--dark);padding:12px 8px;cursor:pointer;background:var(--white);
+    text-align:center;box-shadow:4px 4px 0 var(--dark);transition:transform .06s;position:relative;}
+  .role-card:hover{background:#eef3ff;}
+  .role-card.selected{background:var(--yellow);transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--dark);}
+  .role-card.selected:after{content:"✓";position:absolute;top:3px;right:6px;color:var(--blue2);font-weight:800;font-size:14px;}
+  .role-card .picon{display:flex;justify-content:center;margin-bottom:6px;}
+  .role-card .nm{font-size:14px;font-weight:700;color:var(--deep);}
+  .pickhint{font-size:11px;color:var(--sub);margin:6px 0 0;}
+  .outcome{background:#eef3ff;border:3px solid var(--blue);box-shadow:4px 4px 0 var(--blue);
+    padding:12px 14px;margin:0 0 16px;font-size:12.5px;}
+  .outcome .oh{font-weight:800;color:var(--blue2);font-size:13px;margin-bottom:6px;}
+  .outcome ul{margin:4px 0 0;padding-left:18px;}
+  .outcome li{margin:3px 0;line-height:1.6;}
+  .outcome .can{margin-top:9px;color:var(--deep);font-weight:700;border-top:2px dotted var(--blue);padding-top:8px;}
+  .freebox{margin-top:9px;}
+  .group-title{font-size:13px;font-weight:800;margin:18px 0 9px;color:var(--blue2);
+    border-bottom:3px dotted var(--blue);padding-bottom:5px;}
+  .row{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border:3px solid var(--dark);
+    margin-bottom:8px;background:var(--white);}
+  .row.fixed{background:#eef3ff;}
+  .row input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--blue);flex:0 0 auto;}
+  .row .meta{flex:1;}
+  .row .id{font-size:13px;font-weight:700;color:var(--deep);}
+  .row .desc{font-size:12px;color:var(--sub);line-height:1.6;font-weight:400;}
+  .row .tag{font-size:11px;color:#fff;background:var(--coral);padding:1px 7px;margin-left:6px;font-weight:700;}
+  .row .tag.rec{background:var(--green);}
+  .team-card{border:3px solid var(--blue);padding:9px;background:#eef3ff;margin-top:6px;}
+  .team-card .flow2{font-size:12px;color:var(--blue2);}
+  .implement{margin-top:18px;border-top:3px dotted var(--dark);padding-top:16px;}
+  button{font-family:inherit;font-weight:700;cursor:pointer;padding:11px 16px;font-size:14px;
+    border:3px solid var(--dark);background:var(--white);color:var(--deep);box-shadow:4px 4px 0 var(--dark);transition:.06s;}
+  button:hover{background:#eef3ff;}
+  button:active{transform:translate(4px,4px);box-shadow:none;}
+  button.primary{background:var(--blue);color:#fff;}
+  button.primary:hover{background:var(--blue2);}
+  button.big{width:100%;padding:15px;font-size:15px;letter-spacing:1px;}
+  .nav{display:flex;justify-content:space-between;gap:10px;margin-top:18px;}
+  .hint{font-size:13px;color:var(--sub);}
+  .out{margin-top:14px;}
+  .result-block .rb-h{font-size:13px;font-weight:700;margin:0 0 7px;display:flex;align-items:center;gap:8px;color:var(--deep);}
+  .badge{background:var(--blue);color:#fff;font-size:11px;padding:3px 9px;}
+  .guidebar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .gbtn{font-size:12px;font-weight:700;padding:9px 12px;border:3px solid var(--blue);background:#fff;color:var(--blue2);
+    text-decoration:none;box-shadow:3px 3px 0 var(--blue);cursor:pointer;display:inline-block;}
+  .gbtn:hover{background:#eef3ff;}
+  .gbtn:active{transform:translate(3px,3px);box-shadow:none;}
+  .gbtn.dl{background:var(--blue);color:#fff;font-size:13px;padding:12px 16px;}
+  .gbtn.dl:hover{background:var(--blue2);}
+  .teacher{margin-top:14px;background:#fff7d6;border:3px solid #caa400;box-shadow:5px 5px 0 #caa400;
+    padding:13px 14px;font-size:13px;color:#6b5200;line-height:1.7;}
+  .teacher b{color:#a37e00;font-weight:700;}
+  .note{background:#ffe9e9;border:3px solid var(--coral);box-shadow:4px 4px 0 var(--coral);
+    padding:11px 13px;font-size:12px;color:#9c2b2b;margin-top:16px;}
+  .toast{position:fixed;top:18px;left:50%;transform:translate(-50%,0);background:var(--yellow);
+    color:var(--deep);border:3px solid var(--dark);box-shadow:5px 5px 0 var(--dark);
+    padding:11px 22px;font-size:16px;z-index:50;opacity:0;pointer-events:none;white-space:nowrap;}
+  .toast.show{animation:pop 1.7s forwards;}
+  @keyframes pop{0%{transform:translate(-50%,6px) scale(.6);opacity:0}
+    18%{transform:translate(-50%,0) scale(1.12);opacity:1}
+    78%{transform:translate(-50%,0) scale(1);opacity:1}
+    100%{transform:translate(-50%,-10px) scale(1);opacity:0}}
+  .clear-hero{text-align:center;padding:10px 0 4px;}
+  .clear-badge{display:inline-block;background:var(--blue);color:#fff;border:3px solid var(--dark);box-shadow:4px 4px 0 var(--dark);padding:8px 18px;font-size:18px;letter-spacing:2px;}
+  .clear-title{font-size:21px;font-weight:900;margin:14px 0 4px;color:var(--deep);}
+  .clear-sub{font-size:13px;color:var(--sub);margin:0;}
+  .clear-recap,.clear-dl{background:#eef3ff;border:3px solid var(--blue);box-shadow:4px 4px 0 var(--blue);padding:12px 14px;margin:16px 0;font-size:13px;}
+  .clear-recap ul{margin:6px 0 0;padding-left:18px;} .clear-recap li{margin:3px 0;line-height:1.6;}
+  .clear-dl .guidebar{margin-top:10px;}
+  .confetti{position:fixed;top:-14px;width:9px;height:9px;z-index:60;pointer-events:none;animation:confall 2.2s ease-in forwards;}
+  @keyframes confall{0%{transform:translateY(0) rotate(0);opacity:1}100%{transform:translateY(104vh) rotate(540deg);opacity:.9}}
+</style>
+</head>
+<body>
+<div id="toast" class="toast pixel"></div>
+<div class="wrap">
+  <header>
+    <div class="mascot" id="mascot">
+      <svg viewBox="-1 -7 18 24" width="124" height="165" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="clawdくん（AI秘書）がPCで作業中">
+        <defs>
+          <style>
+            .body-bounce{transform-origin:7.5px 15px;animation:body-bounce .35s infinite ease-in-out;}
+            .breathe{transform-origin:7.5px 13px;animation:breathe 3.2s infinite ease-in-out;}
+            .arm-l-type{transform-origin:2px 10px;animation:type-l .15s infinite ease-in-out;}
+            .arm-r-type{transform-origin:13px 10px;animation:type-r .12s infinite ease-in-out;}
+            .eyes-code{transform-origin:7.5px 9px;animation:eye-code 10s infinite ease-in-out;}
+            .code-line{transform-box:fill-box;transform-origin:left center;}
+            .cl1{animation:cl1 6s infinite;}.cl2{animation:cl2 6s infinite;}.cl3{animation:cl3 6s infinite;}.cl4{animation:cl4 6s infinite;}
+            .key-flash{opacity:0;}
+            .kf1{animation:kflash .6s infinite;}.kf2{animation:kflash .8s infinite;animation-delay:-.25s;}.kf3{animation:kflash .5s infinite;animation-delay:-.1s;}
+            .kf4{animation:kflash .7s infinite;animation-delay:-.45s;}.kf5{animation:kflash .55s infinite;animation-delay:-.3s;}.kf6{animation:kflash .9s infinite;animation-delay:-.5s;}
+            .data-bit{opacity:0;animation:float-data 1.5s infinite linear;}
+            .d1{animation-delay:0s;}.d2{animation-delay:-.4s;}.d3{animation-delay:-.8s;}.d4{animation-delay:-1.2s;}
+            .shadow-anim{transform-origin:7.5px 15.5px;animation:shadow-bob .4s infinite ease-in-out;}
+            @keyframes body-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(.8px)}}
+            @keyframes breathe{0%,100%{transform:scale(1,1) translate(0,0)}50%{transform:scale(1.02,.98) translate(0,.5px)}}
+            @keyframes shadow-bob{0%,100%{transform:scaleX(1.02);opacity:.5}50%{transform:scaleX(1.05);opacity:.55}}
+            @keyframes type-l{0%{transform:rotate(-5deg)}25%{transform:rotate(-38deg)}50%{transform:rotate(-10deg)}75%{transform:rotate(-30deg)}100%{transform:rotate(-5deg)}}
+            @keyframes type-r{0%{transform:rotate(5deg)}25%{transform:rotate(38deg)}50%{transform:rotate(10deg)}75%{transform:rotate(30deg)}100%{transform:rotate(5deg)}}
+            @keyframes eye-code{0%{transform:translate(0,1px) scaleY(.6)}14%{transform:translate(0,1px) scaleY(.6)}15%{transform:translate(0,1px) scaleY(.1)}16%{transform:translate(0,1px) scaleY(.6)}36%{transform:translate(0,1px) scaleY(.6)}37%{transform:translate(0,1px) scaleY(.1)}38%{transform:translate(0,1px) scaleY(.6)}54%{transform:translate(0,1px) scaleY(.6)}55%{transform:translate(0,1px) scaleY(.1)}57%{transform:translate(-1px,-.5px) scaleY(1)}62%{transform:translate(1.5px,-.5px) scaleY(1)}64%{transform:translate(-.5px,-.3px) scaleY(1)}69%{transform:translate(1.5px,-.5px) scaleY(1)}71%{transform:translate(1px,-.3px) scaleY(.1)}73%{transform:translate(0,1px) scaleY(.6)}89%{transform:translate(0,1px) scaleY(.6)}90%{transform:translate(0,1px) scaleY(.1)}91%{transform:translate(0,1px) scaleY(.6)}100%{transform:translate(0,1px) scaleY(.6)}}
+            @keyframes cl1{0%{transform:scaleX(0);opacity:0}3%{transform:scaleX(0);opacity:1}13%{transform:scaleX(1);opacity:1}13%,78%{transform:scaleX(1) translateY(0);opacity:1}88%{transform:scaleX(1) translateY(-3px);opacity:0}89%,100%{transform:scaleX(0) translateY(0);opacity:0}}
+            @keyframes cl2{0%,14%{transform:scaleX(0);opacity:0}15%{transform:scaleX(0);opacity:1}27%{transform:scaleX(1);opacity:1}27%,82%{transform:scaleX(1) translateY(0);opacity:1}91%{transform:scaleX(1) translateY(-3px);opacity:0}92%,100%{transform:scaleX(0) translateY(0);opacity:0}}
+            @keyframes cl3{0%,29%{transform:scaleX(0);opacity:0}30%{transform:scaleX(0);opacity:1}42%{transform:scaleX(1);opacity:1}42%,85%{transform:scaleX(1) translateY(0);opacity:1}93%{transform:scaleX(1) translateY(-3px);opacity:0}94%,100%{transform:scaleX(0) translateY(0);opacity:0}}
+            @keyframes cl4{0%,44%{transform:scaleX(0);opacity:0}45%{transform:scaleX(0);opacity:1}57%{transform:scaleX(1);opacity:1}57%,88%{transform:scaleX(1) translateY(0);opacity:1}95%{transform:scaleX(1) translateY(-3px);opacity:0}96%,100%{transform:scaleX(0) translateY(0);opacity:0}}
+            @keyframes kflash{0%,70%,100%{opacity:0}35%{opacity:.8}}
+            @keyframes float-data{0%{transform:translateY(0) scale(.5);opacity:0}10%{opacity:.8}100%{transform:translateY(-17px) scale(1);opacity:0}}
+          </style>
+          <g id="clawd-packet"><rect x="0" y="0" width="1.5" height="1.5"/></g>
+        </defs>
+        <rect class="shadow-anim" x="3" y="15" width="9" height="1" fill="#000" opacity="0.5"/>
+        <g fill="#40C4FF">
+          <use href="#clawd-packet" class="data-bit d1" x="3" y="7"/>
+          <use href="#clawd-packet" class="data-bit d2" x="7" y="8"/>
+          <use href="#clawd-packet" class="data-bit d3" x="11" y="7"/>
+          <use href="#clawd-packet" class="data-bit d4" x="5" y="8"/>
+        </g>
+        <g transform="translate(1.25,0)">
+          <rect x="-0.5" y="-6" width="13.5" height="10.5" fill="#1E1E2E" rx="0.3"/>
+          <rect x="-0.5" y="-6" width="13.5" height="1.2" fill="#2D2D3D" rx="0.3"/>
+          <rect x="0.3" y="-5.6" width="0.5" height="0.4" fill="#FF5F56"/>
+          <rect x="1.2" y="-5.6" width="0.5" height="0.4" fill="#FFBD2E"/>
+          <rect x="2.1" y="-5.6" width="0.5" height="0.4" fill="#27C93F"/>
+          <rect class="code-line cl1" x="0.5" y="-3.5" width="5" height="0.7" fill="#4CAF50" opacity="0.8"/>
+          <rect class="code-line cl2" x="2" y="-1.8" width="8" height="0.7" fill="#4CAF50" opacity="0.8"/>
+          <rect class="code-line cl3" x="2" y="-0.1" width="4.5" height="0.7" fill="#40C4FF" opacity="0.7"/>
+          <rect class="code-line cl4" x="0.5" y="1.6" width="2" height="0.7" fill="#FFC107" opacity="0.7"/>
+        </g>
+        <g class="body-bounce"><g class="breathe">
+          <g fill="#DE886D"><rect x="3" y="13" width="1" height="2"/><rect x="5" y="13" width="1" height="2"/><rect x="9" y="13" width="1" height="2"/><rect x="11" y="13" width="1" height="2"/><rect x="2" y="6" width="11" height="7"/></g>
+          <g class="eyes-code" fill="#000"><rect x="4" y="8" width="1" height="2"/><rect x="10" y="8" width="1" height="2"/></g>
+        </g></g>
+        <g transform="translate(-0.5,11.8)">
+          <rect x="0" y="0" width="16" height="3.2" fill="#455A64" rx="0.3"/>
+          <g fill="#78909C"><rect x="0.5" y="0.4" width="1" height="0.7"/><rect x="1.8" y="0.4" width="1" height="0.7"/><rect x="3.5" y="0.4" width="6" height="0.7" rx="0.2"/><rect x="10.2" y="0.4" width="1" height="0.7"/><rect x="11.5" y="0.4" width="1" height="0.7"/><rect x="12.8" y="0.4" width="1" height="0.7"/><rect x="14.1" y="0.4" width="1.3" height="0.7"/></g>
+          <g fill="#78909C"><rect x="0.8" y="1.3" width="0.9" height="0.7"/><rect x="2.0" y="1.3" width="0.9" height="0.7"/><rect x="3.2" y="1.3" width="0.9" height="0.7"/><rect x="4.4" y="1.3" width="0.9" height="0.7"/><rect x="5.6" y="1.3" width="0.9" height="0.7"/><rect x="6.8" y="1.3" width="0.9" height="0.7"/><rect x="8.0" y="1.3" width="0.9" height="0.7"/><rect x="9.2" y="1.3" width="0.9" height="0.7"/><rect x="10.4" y="1.3" width="0.9" height="0.7"/><rect x="11.6" y="1.3" width="0.9" height="0.7"/><rect x="12.8" y="1.3" width="0.9" height="0.7"/><rect x="14.0" y="1.3" width="0.9" height="0.7"/></g>
+          <g fill="#78909C"><rect x="0.5" y="2.2" width="0.9" height="0.7"/><rect x="1.7" y="2.2" width="0.9" height="0.7"/><rect x="2.9" y="2.2" width="0.9" height="0.7"/><rect x="4.1" y="2.2" width="0.9" height="0.7"/><rect x="5.3" y="2.2" width="0.9" height="0.7"/><rect x="6.5" y="2.2" width="0.9" height="0.7"/><rect x="7.7" y="2.2" width="0.9" height="0.7"/><rect x="8.9" y="2.2" width="0.9" height="0.7"/><rect x="10.1" y="2.2" width="0.9" height="0.7"/><rect x="11.3" y="2.2" width="0.9" height="0.7"/><rect x="12.5" y="2.2" width="0.9" height="0.7"/><rect x="13.7" y="2.2" width="0.9" height="0.7"/><rect x="14.9" y="2.2" width="0.6" height="0.7"/></g>
+          <g fill="#B0BEC5"><rect class="key-flash kf1" x="4.4" y="1.3" width="0.9" height="0.7"/><rect class="key-flash kf2" x="9.2" y="1.3" width="0.9" height="0.7"/><rect class="key-flash kf3" x="2.9" y="2.2" width="0.9" height="0.7"/><rect class="key-flash kf4" x="7.7" y="2.2" width="0.9" height="0.7"/><rect class="key-flash kf5" x="11.6" y="1.3" width="0.9" height="0.7"/><rect class="key-flash kf6" x="3.5" y="0.4" width="6" height="0.7" rx="0.2"/></g>
+        </g>
+        <g class="body-bounce"><g class="breathe"><g fill="#DE886D"><g class="arm-l-type"><rect x="0" y="9" width="2" height="2"/></g><g class="arm-r-type"><rect x="13" y="9" width="2" height="2"/></g></g></g></g>
+      </svg>
+    </div>
+    <div class="head-main">
+      <h1>AI秘書ビルダー</h1>
+      <div class="bubble" id="bubble">いっしょにAI秘書を作るのだ！まず役割をえらぶのだ〜（複数えらべるのだ）</div>
+    </div>
+    <button class="mute" id="mute" onclick="toggleMute(this)" title="効果音 ON/OFF">🔊</button>
+  </header>
+
+  <div class="banner pbox"><b>すすめかた</b>：① えらぶ → <b>その場でじっそう</b>（動くAI秘書ができる）→ <b>講師が概念を説明</b> → ②③へ</div>
+  <div class="banner pbox notice"><b>受講者限定ツール</b>：本ツールは DAIJOBU株式会社 が公開・提供する Claude Code 研修の受講者向けです。関係者以外へのURL共有・再配布はご遠慮ください。</div>
+
+  <div class="steps">
+    <div class="s active" data-s="1"><small class="pixel">STAGE 1</small>① ガワ</div>
+    <div class="s" data-s="2"><small class="pixel">STAGE 2</small>② 能力</div>
+    <div class="s" data-s="3"><small class="pixel">STAGE 3</small>③ 中身</div>
+  </div>
+  <div class="xp pbox">
+    <span class="xp-label pixel">EXP</span>
+    <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+    <span class="xp-label pixel" id="xpLabel">0/3</span>
+  </div>
+
+  <section class="panel pbox active" data-p="1">
+    <h2>① ガワ（第1部）— えらんで、その場でじっそう</h2>
+    <p class="lead">事業と役割を決め、繋ぐツールと権限を選ぶ → じっそうボタンで「動くAI秘書」を立ち上げる。</p>
+    <div class="outcome">
+      <div class="oh">このステージで作られるもの</div>
+      <ul>
+        <li>置き場のフォルダ構造（context/・work/・.claude/ など）</li>
+        <li><b>CLAUDE.md</b>（AIの業務マニュアル＝事業概要・絶対ルール・日本語応答）</li>
+        <li>.claude/rules（規範の分割）／外部ツール接続／settings.json（権限）</li>
+      </ul>
+      <div class="can">できること：「おはよう」で今日の工程表が出る。自分専用AI秘書の"土台"が動く</div>
+    </div>
+    <label class="field">▶ 会社名 ／ あなたのお名前 ／ AI秘書につけたい名前</label>
+    <input type="text" id="company" placeholder="会社名（例：DAIJOBU株式会社）">
+    <input type="text" id="person" placeholder="あなたのお名前（例：山中裕貴）">
+    <input type="text" id="ainame" placeholder="AI秘書につけたい名前（任意・例：みにふぇね）">
+    <label class="field">▶ あなたの役割（複数えらべます。兼任もOK）</label>
+    <div class="roles" id="roleCards"></div>
+    <p class="pickhint">例：経営者が営業も採用も兼ねる → 複数選ぶと鉄板スキルと役割チームがぜんぶ入ります。当てはまらなければ「その他」に自由入力でOK。</p>
+    <div class="freebox" id="roleOtherBox" style="display:none"><input type="text" id="roleOther" placeholder="あなたの役割を書いてください（例：税理士／カスタマーサクセス／製造現場／デザイナー）"></div>
+    <div class="group-title">▶ 繋ぐツール（使うものにチェック・あとから足せます）</div>
+    <div id="toolList"></div>
+    <div class="freebox"><input type="text" id="toolsFree" placeholder="その他のツールを自由に追記（カンマ区切り。例：kintone, Box, freee, HubSpot）"></div>
+    <div class="group-title">▶ 権限の方針（「推奨」はチェック済み。あとから変えられます）</div>
+    <div class="row fixed"><input type="checkbox" checked disabled><div class="meta"><span class="id">破壊系コマンド・機密ファイル読取を deny<span class="tag rec">必須</span></span><div class="desc">安全の最低ライン（固定）</div></div></div>
+    <div id="permList"></div>
+    <div class="implement">
+      <button class="primary big" onclick="impl(1)">▶ ① ガワを今すぐじっそう（第1部プロンプト生成）</button>
+      <div class="out" id="out1"></div>
+    </div>
+    <div class="nav"><span></span><button onclick="go(2)">② 能力へ ▶</button></div>
+  </section>
+
+  <section class="panel pbox" data-p="2">
+    <h2>② 能力（第2部）— スキル＆エージェント</h2>
+    <p class="lead">全員の土台 ＋ 選んだ役割の鉄板。作るものを選んで、その場でじっそう。</p>
+    <div class="outcome">
+      <div class="oh">このステージで作られるもの</div>
+      <ul>
+        <li>よく使う業務の<b>スキル</b>（/daily-schedule などのスラッシュコマンド）</li>
+        <li>選んだ役割の<b>Agent Team</b>（複数AIが分担する作業チーム）</li>
+      </ul>
+      <div class="can">できること：繰り返し作業がコマンド一発に。重い調査・制作をチームに任せられる</div>
+    </div>
+    <div id="step2body"></div>
+    <div class="implement">
+      <button class="primary big" onclick="impl(2)">▶ ② 能力をじっそう（第2部プロンプト生成）</button>
+      <div class="out" id="out2"></div>
+    </div>
+    <div class="nav"><button onclick="go(1)">◀ もどる</button><button onclick="go(3)">③ 中身へ ▶</button></div>
+  </section>
+
+  <section class="panel pbox" data-p="3">
+    <h2>③ 中身（第3部）— コンテキスト充実</h2>
+    <p class="lead">会社の事実を context/ に入れて「自社が分かる秘書」にする。入れる資料を選んで、じっそう。</p>
+    <div class="outcome">
+      <div class="oh">このステージで作られるもの</div>
+      <ul>
+        <li><b>context/</b> に会社の事実（事業概要・顧客・規程・メンバーなど）</li>
+        <li>自社理解度スコア（埋まり具合の採点と、次に足すと効く資料の提案）</li>
+      </ul>
+      <div class="can">できること：一般論でなく「自社を分かっている」回答に。使うほど賢くなる</div>
+    </div>
+    <div id="step3body"></div>
+    <div class="implement">
+      <button class="primary big" onclick="impl(3)">▶ ③ 中身をじっそう（第3部プロンプト生成）</button>
+      <div class="out" id="out3"></div>
+    </div>
+    <div class="note">このアプリは決定を集めて指示文を作るだけ。実際の構築・context注入は Claude Code が行います。</div>
+    <div class="nav"><button onclick="go(2)">◀ もどる</button><button onclick="resetAll()">↺ リセット</button></div>
+  </section>
+
+  <section class="panel pbox" data-p="4" id="clearPanel"></section>
+  <footer class="foot"><span class="pill">受講者限定</span><span class="pill">無断転載・再配布禁止</span><br>© 2026 DAIJOBU株式会社 — 本ツールは DAIJOBU株式会社 が公開・提供しています。著作権は DAIJOBU株式会社 に帰属します。</footer>
+</div>
+
+<script>
+/* ===== 8bit sound ===== */
+let audioCtx=null, muted=false;
+function ac(){ if(!audioCtx){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}} if(audioCtx.state==='suspended')audioCtx.resume(); return audioCtx; }
+function tone(freq,start,dur,type){ const c=ac(); if(!c)return; const o=c.createOscillator(),g=c.createGain();
+  o.type=type||'square'; o.frequency.value=freq; o.connect(g); g.connect(c.destination);
+  const t=c.currentTime+start; g.gain.setValueAtTime(0.06,t); g.gain.exponentialRampToValueAtTime(0.0008,t+dur);
+  o.start(t); o.stop(t+dur+0.02); }
+function blip(){ if(muted)return; tone(587,0,0.05); tone(880,0.05,0.07); }
+function tick(){ if(muted)return; tone(720,0,0.03); }
+function navsfx(){ if(muted)return; tone(494,0,0.05); tone(370,0.05,0.06); }
+function clearSfx(){ if(muted)return; [659,784,988,1319].forEach((f,i)=>tone(f,i*0.085,0.16)); }
+function maxSfx(){ if(muted)return; [523,659,784,1047,1319,1047,1568].forEach((f,i)=>tone(f,i*0.1,0.18)); }
+function toggleMute(btn){ muted=!muted; btn.textContent=muted?'🔇':'🔊'; if(!muted)blip(); }
+
+/* ===== pixel sprite engine ===== */
+const PAL={b:'#1e5ff2',d:'#0e2a6b',w:'#ffffff',k:'#0a1f52',y:'#ffd23f',g:'#3ec46d',r:'#ff6b6b',l:'#9fc0ff',s:'#ffd9ad'};
+function sprite(rows,scale){
+  scale=scale||4;const h=rows.length,w=rows[0].length;let rects='';
+  for(let y=0;y<h;y++){for(let x=0;x<w;x++){const c=rows[y][x];if(c!==' '&&PAL[c]){rects+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+PAL[c]+'"/>';}}}
+  return '<svg viewBox="0 0 '+w+' '+h+'" width="'+(w*scale)+'" height="'+(h*scale)+'">'+rects+'</svg>';
+}
+const SPRITES={
+  keiei:["        ","d  d  d ","y  y  y ","yy yy yy","yyyyyyyy","yykyykyy","yyyyyyyy","        "],
+  eigyo:["   bb   ","  bbbb  "," bbbbbb ","bbbbbbbb","  bbbb  ","  bbbb  ","  bbbb  ","        "],
+  marke:["        ","      r ","      r ","   r  r ","   r  r "," r r  r "," r r  r "," dddddd "],
+  cs:["  bbbb  "," b    b ","bb    bb","dd    dd","dd    dd","dd    d ","      d ","     dd "],
+  jinji:["  dddd  "," dssssd "," dskksd "," dssssd ","  dddd  "," dbbbbd ","dbbbbbbd","db    bd"],
+  keiri:["        ","  yyyy  "," yydyy  "," ydddy  "," yydyy  "," yydyy  ","  yyyy  ","        "],
+  bo:["        ","ddd     ","dyyddddd","dyyyyyyd","dyyyyyyd","dyyyyyyd","dddddddd","        "],
+  qa:["  d  d  ","  d  d  ","  dggd  "," dggggd "," dgwggd "," dggggd ","  dddd  ","        "],
+  other:["        ","   dd   ","   dd   "," dddddd "," dddddd ","   dd   ","   dd   ","        "]
+};
+
+/* ===== data ===== */
+const UNIVERSAL=[
+  {id:"/daily-schedule",desc:"朝の工程表（15分刻み）"},
+  {id:"/mtg-prep",desc:"会議の事前準備資料（共有用＋社内メモの2部構成）"}
+];
+const ROLES={
+  keiei:{name:"経営",
+    tetsuban:[{id:"/sparring",desc:"経営判断・戦略の壁打ち（反論・別視点を出させる）"},{id:"/weekly-report",desc:"今週の成果・進捗・課題を定点観測"}],
+    next:[{id:"/clip",desc:"投資・業界情報の取り込み"},{id:"/company-research",desc:"投資・提携先の企業カルテ"}],
+    team:{name:"戦略分析チーム",flow:"問いの設計→市場調査→定量分析→戦略設計→批判的レビュー"},
+    docs:[{id:"事業計画・中期計画",on:true},{id:"取締役会・経営会議の資料/議事録",on:true},{id:"月次業績サマリ（PL・KPI）",on:false},{id:"会社案内・HP",on:true}]},
+  eigyo:{name:"営業",
+    tetsuban:[{id:"/meeting-email",desc:"商談の事前/事後メール下書き（送信は本人許可後）"},{id:"/company-research",desc:"新規リード・初回商談の企業カルテ"}],
+    next:[{id:"商談FB・ナーチャ系",desc:"自社CRM・案件管理に合わせて"},{id:"/clip",desc:"業界・競合情報の取り込み"}],
+    team:{name:"提案書作成チーム",flow:"顧客リサーチ→競合分析→ソリューション設計→コピーライター→レビュアー"},
+    docs:[{id:"標準提案デック・サービス資料",on:true},{id:"価格表・見積テンプレ",on:true},{id:"既存顧客リスト",on:true},{id:"商談議事録",on:false}]},
+  marke:{name:"マーケ",
+    tetsuban:[{id:"/clip",desc:"競合・トレンド・ネタの取り込み"},{id:"/company-research",desc:"ターゲット・競合の調査カルテ"}],
+    next:[{id:"コンテンツ下書き系",desc:"記事・LP・SNSを自社トンマナで"},{id:"SNS運用系",desc:"投稿カレンダー・下書き"}],
+    team:{name:"コンテンツ制作チーム",flow:"リサーチ→構成設計→執筆→SEO/校正→レビュー"},
+    docs:[{id:"ブランド・トンマナガイド",on:true},{id:"過去の記事・LP・投稿",on:true},{id:"ターゲット/ペルソナ定義",on:true},{id:"競合・キーワードリスト",on:false}]},
+  cs:{name:"CS・サポート",
+    tetsuban:[{id:"/meeting-email",desc:"問い合わせ・お詫び・案内メールの下書き"},{id:"/clip",desc:"FAQ・既知不具合・製品情報の蓄積"}],
+    next:[{id:"FAQ回答ドラフト系",desc:"context/product/ を前提に回答下書き"},{id:"議事録要約系",desc:"オンボーディング/定例の記録"}],
+    team:{name:"問い合わせ対応チーム",flow:"一次受け→分類→回答ドラフト→エスカレ判断→レビュー"},
+    docs:[{id:"製品仕様・操作マニュアル",on:true},{id:"FAQ・過去の問い合わせ",on:true},{id:"返信テンプレ集",on:true},{id:"SLA・エスカレ基準",on:false}]},
+  jinji:{name:"人事・採用",
+    tetsuban:[{id:"/interview",desc:"求人要件・評価軸を着手前に深掘りしspecへ"},{id:"/meeting-email",desc:"日程調整・オファー・お見送り連絡の下書き"}],
+    next:[{id:"1on1・面接系",desc:"context/candidates/ を前提にカスタマイズ"},{id:"評価・労務FAQ系",desc:"評価シート下書き・就業規則の参照回答"}],
+    team:{name:"候補者評価チーム",flow:"求人要件設計→経歴スクリーニング→面接設計→評価サマリ→批判的レビュー"},
+    docs:[{id:"求人票・募集要項",on:true},{id:"評価シート・面接基準",on:true},{id:"就業規則・人事制度",on:true},{id:"カルチャーデック",on:false}]},
+  keiri:{name:"経理・財務",
+    tetsuban:[{id:"/daily-log",desc:"日次の処理・対応を記録（月次の土台）"},{id:"/clip",desc:"税制・会計基準・補助金の改正を蓄積"}],
+    next:[{id:"定型文書ドラフト系",desc:"請求・督促・稟議の文書作成"},{id:"月次まとめ系",desc:"予実・資金繰りの定点サマリ"}],
+    team:{name:"月次まとめチーム",flow:"数値収集→分類→サマリ作成→整合チェック"},
+    docs:[{id:"勘定科目表",on:true},{id:"請求書・契約書の定型フォーマット",on:true},{id:"取引先・支払先一覧",on:true},{id:"月次PL・予算",on:false}]},
+  bo:{name:"総務・バックオフィス",
+    tetsuban:[{id:"/clip",desc:"法改正・制度変更・新ツールの記事を蓄積"},{id:"/slack-digest",desc:"社内問い合わせ・依頼のトリアージ"}],
+    next:[{id:"定型文書ドラフト系",desc:"規程・通知・契約ひな型で文書作成"},{id:"議事録要約系",desc:""}],
+    team:{name:"ナレッジ整備チーム",flow:"情報収集→分類整理→ドキュメント化→整合チェック"},
+    docs:[{id:"社内規程・運用マニュアル",on:true},{id:"契約書の定型フォーマット",on:true},{id:"備品・資産台帳",on:false},{id:"取引先一覧",on:false}]},
+  qa:{name:"開発・QA",
+    tetsuban:[{id:"/interview",desc:"仕様を実装着手前に深掘りしspecへ（手戻り削減）"},{id:"/clip",desc:"技術記事・脆弱性情報を蓄積"},{id:"/daily-log",desc:"コミット・PR・Issue活動を記録"}],
+    next:[{id:"テスト系スキル",desc:"仕様書→テスト観点→テストケース（観点マスタに沿う）"}],
+    team:{name:"テスト設計チーム",flow:"仕様理解→テスト観点抽出→テストケース生成→レビュー"},
+    docs:[{id:"対象リポジトリ",on:true},{id:"仕様書・要件定義",on:true},{id:"既存のテスト計画・観点表",on:true},{id:"過去のバグ・障害レポート",on:false}]}
+};
+const TOOLS=[
+  {id:"Googleカレンダー（コネクタ）",on:true},{id:"Gmail / メール",on:false},
+  {id:"Google Drive",on:false},{id:"Google スプレッドシート/ドキュメント",on:false},
+  {id:"Slack",on:false},{id:"Discord",on:false},{id:"Notion",on:false},{id:"Linear",on:false},
+  {id:"ChatWork",on:false},{id:"Microsoft 365（Outlook/Teams）",on:false},
+  {id:"GitHub",on:false},{id:"Figma",on:false},{id:"Zoom",on:false},
+  {id:"X（旧Twitter）",on:false},{id:"音声通知（VOICEVOX 等）",on:false}
+];
+const PERMS=[
+  {key:'send_draft',id:'外部送信（メール・Slack）は下書き→許可制',desc:'AIは下書きまで。送信は人が確認して実行',rec:true,on:true},
+  {key:'autocommit',id:'ファイル編集後にタスク完了で自動コミット',desc:'作業の記録が残り、いつでも前の状態に戻せる',rec:true,on:true},
+  {key:'read_auto',id:'読み取り系コマンド（ls / grep / cat 等）は自動許可',desc:'毎回の確認を減らしてサクサク動く',rec:true,on:true},
+  {key:'guard_secret',id:'機密フォルダ（owner・finance 等）への書き込みは毎回確認',desc:'重要ファイルのうっかり上書きを防ぐ',rec:true,on:true},
+  {key:'autopush',id:'コミット後に自動 push',desc:'push忘れ防止。リモートに自動で反映される',rec:false,on:false},
+  {key:'web',id:'Webアクセス（検索・WebFetch）を許可',desc:'最新情報を取りに行ける（社外への通信あり）',rec:false,on:false}
+];
+
+const state={company:"",person:"",ainame:"",roles:new Set(),otherOn:false,otherText:"",tools:new Set(),toolsFree:[],perms:new Set(PERMS.filter(p=>p.on).map(p=>p.key)),
+  tetsuban:new Set(),next:new Set(),teams:new Set(),docs:new Set()};
+const implemented=new Set();
+function rnames(){return [...state.roles].map(k=>ROLES[k].name);}
+function otherName(){return state.otherOn&&state.otherText.trim()?state.otherText.trim():'';}
+function allRoleNames(){const a=rnames();if(otherName())a.push(otherName());return a;}
+function hasRole(){return state.roles.size>0||!!otherName();}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function roleSay(){const nm=allRoleNames();return nm.length?nm.join('・')+'だね！いいチョイスなのだ✨ じっそうボタンで動かすのだ':'役割をえらぶのだ〜（兼任なら複数えらぶのだ）';}
+function updateXP(){const n=implemented.size;document.getElementById('xpFill').style.width=(n/3*100)+'%';
+  document.getElementById('xpLabel').textContent=(n===3?'★MAX':n+'/3');}
+function say(m){const b=document.getElementById('bubble');b.textContent=m;b.classList.remove('say');void b.offsetWidth;b.classList.add('say');}
+
+function hop(){const m=document.getElementById('mascot');if(!m)return;m.classList.remove('hop');void m.offsetWidth;m.classList.add('hop');}
+
+const roleCards=document.getElementById('roleCards');
+Object.entries(ROLES).forEach(([k,r])=>{
+  const d=document.createElement('div');d.className='role-card';d.dataset.k=k;
+  d.innerHTML='<span class="picon">'+sprite(SPRITES[k],5)+'</span><span class="nm">'+r.name+'</span>';
+  d.onclick=()=>{blip();hop();
+    if(state.roles.has(k))state.roles.delete(k);else state.roles.add(k);
+    document.querySelectorAll('.role-card[data-k]').forEach(c=>c.classList.toggle('selected',state.roles.has(c.dataset.k)));
+    applyRoleDefaults();
+    say(roleSay());};
+  roleCards.appendChild(d);
+});
+const otherCard=document.createElement('div');otherCard.className='role-card';otherCard.dataset.other='1';
+otherCard.innerHTML='<span class="picon">'+sprite(SPRITES.other,5)+'</span><span class="nm">その他</span>';
+otherCard.onclick=()=>{blip();hop();
+  state.otherOn=!state.otherOn;
+  otherCard.classList.toggle('selected',state.otherOn);
+  document.getElementById('roleOtherBox').style.display=state.otherOn?'block':'none';
+  if(state.otherOn){document.getElementById('roleOther').focus();}
+  else{state.otherText='';document.getElementById('roleOther').value='';}
+  renderStep2();renderStep3();
+  say(state.otherOn&&!otherName()?'その他だね！役割を自由に書いてほしいのだ（例：税理士・カスタマーサクセス・製造現場）':roleSay());};
+roleCards.appendChild(otherCard);
+document.getElementById('roleOther').oninput=e=>{state.otherText=e.target.value;renderStep2();renderStep3();};
+const toolList=document.getElementById('toolList');
+TOOLS.forEach((t)=>{
+  const row=document.createElement('div');row.className='row';
+  row.innerHTML='<input type="checkbox" '+(t.on?'checked':'')+'><div class="meta"><span class="id">'+t.id+'</span></div>';
+  toolList.appendChild(row);
+  if(t.on)state.tools.add(t.id);
+  row.querySelector('input').onchange=e=>{tick();e.target.checked?state.tools.add(t.id):state.tools.delete(t.id);};
+});
+document.getElementById('company').oninput=e=>state.company=e.target.value;
+document.getElementById('person').oninput=e=>state.person=e.target.value;
+document.getElementById('ainame').oninput=e=>state.ainame=e.target.value;
+document.getElementById('toolsFree').oninput=e=>state.toolsFree=e.target.value.split(/[,、]/).map(s=>s.trim()).filter(Boolean);
+const permList=document.getElementById('permList');
+PERMS.forEach(p=>{
+  const row=document.createElement('div');row.className='row';
+  row.innerHTML='<input type="checkbox" '+(p.on?'checked':'')+'><div class="meta"><span class="id">'+p.id+(p.rec?' <span class="tag rec">推奨</span>':'')+'</span><div class="desc">'+p.desc+'</div></div>';
+  permList.appendChild(row);
+  row.querySelector('input').onchange=e=>{tick();e.target.checked?state.perms.add(p.key):state.perms.delete(p.key);};
+});
+
+function mergedSkills(kind){const m=new Map();[...state.roles].forEach(k=>ROLES[k][kind].forEach(s=>{if(!m.has(s.id))m.set(s.id,s);}));return [...m.values()];}
+function mergedDocs(){const m=new Map();[...state.roles].forEach(k=>ROLES[k].docs.forEach(d=>{if(!m.has(d.id))m.set(d.id,d);}));return [...m.values()];}
+
+function applyRoleDefaults(){
+  const ts=new Set(),dc=new Set();state.teams=new Set();
+  [...state.roles].forEach(k=>{const r=ROLES[k];
+    r.tetsuban.forEach(s=>ts.add(s.id));
+    r.docs.filter(d=>d.on).forEach(d=>dc.add(d.id));
+    state.teams.add(k);});
+  state.tetsuban=ts;state.next=new Set();state.docs=dc;
+  renderStep2();renderStep3();
+}
+function skillRow(s,checked,tag){
+  return '<div class="row"><input type="checkbox" '+(checked?'checked':'')+' data-skill="'+s.id+'">'+
+    '<div class="meta"><span class="id">'+s.id+'</span>'+(tag?'<span class="tag">'+tag+'</span>':'')+'<div class="desc">'+(s.desc||'')+'</div></div></div>';
+}
+function renderStep2(){
+  const box=document.getElementById('step2body');
+  if(!hasRole()){box.innerHTML='<p class="hint">先に①で役割を選んでください（複数OK・「その他」自由入力も可）。</p>';return;}
+  let h='<div class="group-title">universal（全員の土台・固定）</div>';
+  UNIVERSAL.forEach(s=>h+='<div class="row fixed"><input type="checkbox" checked disabled><div class="meta"><span class="id">'+s.id+'</span><div class="desc">'+s.desc+'</div></div></div>');
+  if(state.roles.size){
+    h+='<div class="group-title">鉄板スキル（'+rnames().join('・')+'のおすすめ・ON）</div>';
+    mergedSkills('tetsuban').forEach(s=>h+=skillRow(s,state.tetsuban.has(s.id),'鉄板'));
+    h+='<div class="group-title">次に足す（慣れたら）</div>';
+    var tIds=new Set(mergedSkills('tetsuban').map(s=>s.id));
+    mergedSkills('next').filter(s=>!tIds.has(s.id)).forEach(s=>h+=skillRow(s,state.next.has(s.id),null));
+    h+='<div class="group-title">役割の Agent Team（役割ごと）</div>';
+    [...state.roles].forEach(k=>{const r=ROLES[k];
+      h+='<div class="row"><input type="checkbox" '+(state.teams.has(k)?'checked':'')+' data-team="'+k+'"><div class="meta">'+
+        '<span class="id">【'+r.name+'】'+r.team.name+'</span><div class="team-card"><div class="flow2">分担：'+r.team.flow+'</div></div></div></div>';});
+  }
+  if(otherName()){
+    h+='<div class="group-title">その他の役割</div>';
+    h+='<div class="row fixed"><input type="checkbox" checked disabled><div class="meta"><span class="id">「'+esc(otherName())+'」</span><div class="desc">専用カタログが無いので、universal から始めて会話で鉄板スキルを足していきます</div></div></div>';
+  }
+  box.innerHTML=h;
+  box.querySelectorAll('[data-skill]').forEach(cb=>cb.onchange=e=>{tick();
+    const id=e.target.dataset.skill;const inT=mergedSkills('tetsuban').some(s=>s.id===id);
+    const set=inT?state.tetsuban:state.next;e.target.checked?set.add(id):set.delete(id);});
+  box.querySelectorAll('[data-team]').forEach(cb=>cb.onchange=e=>{tick();const k=e.target.dataset.team;e.target.checked?state.teams.add(k):state.teams.delete(k);});
+}
+function renderStep3(){
+  const box=document.getElementById('step3body');
+  if(!hasRole()){box.innerHTML='<p class="hint">先に①で役割を選んでください（複数OK・「その他」自由入力も可）。</p>';return;}
+  let h='<div class="group-title">先に入れると効く会社資料（'+esc(allRoleNames().join('・'))+'向け）</div>';
+  const docs=mergedDocs();
+  if(docs.length){docs.forEach(d=>h+='<div class="row"><input type="checkbox" '+(state.docs.has(d.id)?'checked':'')+' data-doc="'+d.id+'"><div class="meta"><span class="id">'+d.id+'</span></div></div>');}
+  else{h+='<div class="row fixed"><input type="checkbox" checked disabled><div class="meta"><span class="id">会社の基本資料（事業概要・主要業務の手順・主要顧客）</span><div class="desc">役割カタログが無いので、まず基本から。会話で足していきます</div></div></div>';}
+  h+='<div class="group-title">仕上げ</div>';
+  h+='<div class="row fixed"><input type="checkbox" checked disabled><div class="meta"><span class="id">自社理解度スコアを出す</span><div class="desc">埋まり具合を採点し、次に足すと効く資料を提案</div></div></div>';
+  const ctxRef=state.roles.size?'role-contexts/'+rnames().join('・')+' を参照':'役割カタログは未整備（その他のみ）';
+  h+='<div class="row fixed"><input type="checkbox" checked disabled><div class="meta"><span class="id">'+esc(ctxRef)+'</span><div class="desc">選んだ役割の鉄板・注意を踏まえて下書き'+(otherName()?'（その他「'+esc(otherName())+'」は会話で詰める）':'')+'</div></div></div>';
+  box.innerHTML=h;
+  box.querySelectorAll('[data-doc]').forEach(cb=>cb.onchange=e=>{tick();const id=e.target.dataset.doc;e.target.checked?state.docs.add(id):state.docs.delete(id);});
+}
+function go(n){
+  if(n>=2&&!hasRole()){alert('先に①で役割を選んでください。');return;}
+  navsfx();
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',+p.dataset.p===n));
+  document.querySelectorAll('.steps .s').forEach(s=>{const sn=+s.dataset.s;s.classList.toggle('active',sn===n);s.classList.toggle('done',implemented.has(sn)&&sn!==n);});
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function list(set){return [...set].join('、')||'（なし）';}
+function toolsAll(){const a=[...state.tools,...state.toolsFree];return a.length?a.join('、'):'（なし）';}
+function permLine(){const base='破壊系コマンド・機密ファイル読取を deny（固定）';const sel=PERMS.filter(p=>state.perms.has(p.key)).map(p=>p.id);return base+(sel.length?'／'+sel.join('／'):'');}
+function teamLine(){const ts=[...state.teams].map(k=>ROLES[k].team.name+'（'+ROLES[k].team.flow+'）');return ts.length?ts.join(' / '):'今回は作らない（単発エージェント1〜2個から）';}
+function buildP1(){
+  const company=state.company||'（会社名未入力）';
+  const person=state.person||'（お名前未入力）';
+  const an=state.ainame.trim();
+  const nameLine=an?an:'（任意・未設定。付けたい場合のみ後で命名）';
+  const claudeMdName=an?'CLAUDE.md冒頭に「'+an+'」という名前のAI秘書として'+person+'（'+company+'）を補佐する旨を明記':'CLAUDE.md冒頭に、'+person+'（'+company+'）を補佐するAI秘書である旨を明記（名前は任意。付けたい場合のみ命名）';
+  return '【第1部 ガワ：CLAUDE.mdと土台】このファイル（第1部）の手順で進めてください。応答は必ず日本語で。\n'+
+  '- 会社名：'+company+'\n- あなた（ユーザー）：'+person+'\n- AI秘書の呼び名：'+nameLine+'\n- 役割：'+allRoleNames().join('・')+'\n'+
+  '- フォルダ構造と CLAUDE.md を作成（'+claudeMdName+'。絶対ルール#1=日本語応答、対外送信は下書き→許可、機密厳守を含める）\n'+
+  '- 繋ぐツール：'+toolsAll()+'（コネクタ→CLI→MCPの順）\n'+
+  '- 権限：'+permLine()+'\n'+
+  '- セキュリティの最低限（共通付録）を確認してから外部ツール接続へ\n'+
+  '→ ここまでで「おはよう」→ /daily-schedule が動く"ガワ"が完成します。';
+}
+function buildP2(){
+  const other=otherName()?'\n- その他の役割「'+otherName()+'」：専用テンプレ無し。universal＋会話で鉄板スキルを決める':'';
+  return '【第2部 能力：スキル＆エージェント】このファイル（第2部）の手順で、以下を作ってください。応答は日本語で。\n'+
+  '- 対象役割：'+allRoleNames().join('・')+'\n- universal（全員）：/daily-schedule、/mtg-prep\n'+
+  '- 鉄板スキル：'+list(state.tetsuban)+'\n- 次に足す：'+list(state.next)+'\n'+
+  '- Agent Team：'+teamLine()+other+'\n'+
+  '- 各スキルに Gotchas 枠を入れ、description で自動起動する形に';
+}
+function buildP3(){
+  const cats=rnames();
+  const ref=cats.length?'companion/role-contexts/ の '+cats.join('・')+' を参照し、':'';
+  const other=otherName()?'\n- その他の役割「'+otherName()+'」は専用カタログが無いので、業務の実態を会話でヒアリングしながら context/ を埋める':'';
+  return '【第3部 中身：コンテキスト充実】このファイル（第3部）の手順で、context/ を充実させてください。応答は日本語で。\n'+
+  '- 先に入れる会社資料：'+list(state.docs)+'\n'+
+  '- '+ref+'資料→下書き→確認→ヒアリングで context/ を埋める'+other+'\n'+
+  '- 最後に自社理解度スコアを提示し、次に足すと効く資料を案内\n'+
+  '- 機密（顧客名・金額・個人情報）は context/ に入れても外部送信物には出さない';
+}
+function impl(n){
+  if(!hasRole()){alert('先に①で役割を選んでください。');return;}
+  let html='<div class="result-block"><div class="rb-h"><span class="badge pixel">第'+n+'部</span>セットができました！DLして Claude Code に渡すだけ</div>'+
+    '<p class="hint" style="margin:0 0 10px">「手順（構築指示書）＋あなたの決定」が1つのファイルにまとまっています。Claude Code を開いて、このファイルを渡せばOK。</p>'+
+    '<div class="guidebar">'+
+    '<button class="gbtn dl" onclick="downloadBundle('+n+',this)">⬇ 第'+n+'部セットをDL（手順＋決定）</button>'+
+    '</div></div>';
+  if(n===1){
+    html+='<div class="teacher"><b>このあと講師が概念を説明します。</b>いま立ち上げた「動くAI秘書」を題材に、CLAUDE.md・スキル・コンテキストが何なのかを解説します。実物を動かしたあとなので、すっと腹落ちするはずです。聞き終わったら ② 能力 に進みましょう。</div>';
+  }
+  const host=document.getElementById('out'+n);host.innerHTML=html;
+  implemented.add(n);updateXP();hop();
+  document.querySelector('.steps .s[data-s="'+n+'"]').classList.add('done');
+  if(implemented.size===3){showToast('★ ALL CLEAR！');maxSfx();say('ぜんステージ制覇なのだ！！🎉');setTimeout(showClear,950);}
+  else{showToast('STAGE '+n+' CLEAR！');clearSfx();say('STAGE'+n+'クリアなのだ！その調子なのだ💪');host.scrollIntoView({behavior:'smooth',block:'nearest'});}
+}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('show');void t.offsetWidth;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700);}
+const GUIDE_FILES={1:'guide/01_第1部_ガワ_CLAUDEmd構築.md',2:'guide/02_第2部_能力_スキルとエージェント.md',3:'guide/03_第3部_中身_コンテキスト充実.md'};
+const PART_NAMES={1:'第1部_ガワ',2:'第2部_能力',3:'第3部_中身'};
+async function downloadBundle(n,btn){
+  const prompt = n===1?buildP1():n===2?buildP2():buildP3();
+  let guide='';
+  try{const res=await fetch(GUIDE_FILES[n]);guide=await res.text();}catch(e){guide='（手順ファイル未読込：ホストして同梱してください）';}
+  const body='<!-- あなたの決定（ウィザード生成）-->\n'+prompt+'\n\n---\n\n<!-- 第'+n+'部 手順（構築指示書・同梱）-->\n'+guide;
+  const blob=new Blob([body],{type:'text/markdown;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=PART_NAMES[n]+'_セット.md';
+  document.body.appendChild(a);a.click();a.remove();
+  if(btn){var o=btn.textContent;btn.textContent='✓ DLしました';setTimeout(function(){btn.textContent=o;},1600);}
+}
+function confetti(){const cols=['#1e5ff2','#ffd23f','#3ec46d','#ff6b6b','#9fc0ff','#673AB7'];
+  for(let i=0;i<30;i++){const s=document.createElement('div');s.className='confetti';
+    s.style.left=(Math.random()*100)+'%';s.style.background=cols[i%cols.length];
+    s.style.animationDelay=(Math.random()*0.5)+'s';document.body.appendChild(s);
+    setTimeout(()=>s.remove(),2700);}}
+function showClear(){
+  const cp=document.getElementById('clearPanel');
+  const company=esc(state.company||'あなたの会社');
+  const person=esc(state.person||'あなた');
+  const nm=state.ainame.trim()?'「'+esc(state.ainame.trim())+'」':'';
+  const roles=esc(allRoleNames().join('・')||'—');
+  let h='<div class="clear-hero"><div class="clear-badge pixel">★ ALL CLEAR ★</div>'
+    +'<h2 class="clear-title">AI秘書'+nm+'が完成！</h2>'
+    +'<p class="clear-sub">'+person+'（'+company+'）専用 ／ 役割：'+roles+'</p></div>';
+  h+='<div class="clear-recap"><div class="oh">作ったもの</div><ul>'
+    +'<li><b>① ガワ</b>：CLAUDE.md・置き場・権限の土台</li>'
+    +'<li><b>② 能力</b>：universal＋役割の鉄板スキル・Agent Team</li>'
+    +'<li><b>③ 中身</b>：context/ に自社の事実</li></ul></div>';
+  h+='<div class="clear-dl"><div class="oh">これで完成です</div>①②③はその場で構築済み。あとは Claude Code で「おはよう」と話しかければ、AI秘書'+nm+'が今日からあなたの仕事を手伝います。</div>';
+  h+='<div class="nav"><button onclick="go(1)">◀ もどって見直す</button><button onclick="resetAll()">↺ もう一度はじめから</button></div>';
+  cp.innerHTML=h;
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  cp.classList.add('active');
+  document.querySelectorAll('.steps .s').forEach(s=>s.classList.add('done'));
+  hop();confetti();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function resetAll(){location.reload();}
+document.querySelectorAll('.steps .s').forEach(s=>s.onclick=()=>go(+s.dataset.s));
+renderStep2();renderStep3();
+</script>
+</body>
+</html>
