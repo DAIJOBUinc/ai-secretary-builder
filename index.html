@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI秘書ビルダー（ドット絵ゲーム版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231e5ff2'/%3E%3Crect x='3' y='4' width='10' height='9' fill='%23DE886D'/%3E%3Crect x='5' y='6' width='1.5' height='2.5' fill='%23000'/%3E%3Crect x='9.5' y='6' width='1.5' height='2.5' fill='%23000'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -116,6 +117,8 @@
   .gbtn:active{transform:translate(3px,3px);box-shadow:none;}
   .gbtn.dl{background:var(--blue);color:#fff;font-size:13px;padding:12px 16px;}
   .gbtn.dl:hover{background:var(--blue2);}
+  .gbtn.fin{background:var(--yellow);color:var(--deep);font-size:13px;padding:12px 16px;}
+  .gbtn.fin:hover{background:#ffe07a;}
   .teacher{margin-top:14px;background:#fff7d6;border:3px solid #caa400;box-shadow:5px 5px 0 #caa400;
     padding:13px 14px;font-size:13px;color:#6b5200;line-height:1.7;}
   .teacher b{color:#a37e00;font-weight:700;}
@@ -417,6 +420,29 @@ function updateXP(){const n=implemented.size;document.getElementById('xpFill').s
 function say(m){const b=document.getElementById('bubble');b.textContent=m;b.classList.remove('say');void b.offsetWidth;b.classList.add('say');}
 
 function hop(){const m=document.getElementById('mascot');if(!m)return;m.classList.remove('hop');void m.offsetWidth;m.classList.add('hop');}
+/* ===== mascot pose swap (typing ⇄ happy)。一度に1体のみDOMなので<style>衝突なし ===== */
+let mascotMode='typing';
+const CLAWD_TYPING=document.getElementById('mascot').innerHTML;
+const CLAWD_HAPPY='<svg viewBox="-8 -14 32 32" width="124" height="124" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="clawdくん（お祝い）"><defs><style>'
++'.h-bounce{transform-box:fill-box;transform-origin:50% 100%;animation:h-bounce 1s infinite ease-in-out;}'
++'.h-shadow{transform-box:fill-box;transform-origin:50% 50%;animation:h-shadow 1s infinite ease-in-out;}'
++'.h-arml{transform-box:fill-box;transform-origin:100% 50%;animation:h-wavel .15s infinite alternate ease-in-out;}'
++'.h-armr{transform-box:fill-box;transform-origin:0% 50%;animation:h-waver .15s infinite alternate ease-in-out;}'
++'.h-eyes{transform-box:fill-box;transform-origin:50% 50%;animation:h-blink 2s infinite linear;}'
++'.h-sc{opacity:0;animation:h-fc 1.5s infinite step-end;animation-delay:var(--d,0s);}'
++'.h-so{opacity:0;animation:h-fo 1.5s infinite step-end;animation-delay:var(--d,0s);}'
++'@keyframes h-bounce{0%,15%,100%{transform:translateY(0) scaleY(1)}20%{transform:translateY(0) scaleY(.85)}40%{transform:translateY(-10px) scaleY(1.05)}50%{transform:translateY(-12px) scaleY(1)}60%{transform:translateY(-10px) scaleY(1.05)}80%{transform:translateY(0) scaleY(.85)}85%{transform:translateY(0) scaleY(1)}}'
++'@keyframes h-shadow{0%,15%,100%{transform:scale(1);opacity:.5}20%{transform:scale(1.1);opacity:.6}40%{transform:scale(.6);opacity:.2}50%{transform:scale(.5);opacity:.15}60%{transform:scale(.6);opacity:.2}80%{transform:scale(1.1);opacity:.6}85%{transform:scale(1);opacity:.5}}'
++'@keyframes h-wavel{0%{transform:rotate(45deg)}100%{transform:rotate(85deg)}}'
++'@keyframes h-waver{0%{transform:rotate(-45deg)}100%{transform:rotate(-85deg)}}'
++'@keyframes h-blink{0%,46%,54%,100%{transform:scaleY(1)}50%{transform:scaleY(.1)}}'
++'@keyframes h-fc{0%{opacity:0}10%{opacity:1}30%{opacity:0}100%{opacity:0}}'
++'@keyframes h-fo{0%{opacity:0}20%{opacity:1}40%{opacity:0}100%{opacity:0}}'
++'</style><g id="h-spark"><rect class="h-sc" x="-0.5" y="-0.5" width="1" height="1"/><path class="h-so" d="M -0.5,-1.5 h1 v1 h-1 z M -0.5,0.5 h1 v1 h-1 z M -1.5,-0.5 h1 v1 h-1 z M 0.5,-0.5 h1 v1 h-1 z"/></g></defs>'
++'<rect class="h-shadow" x="3" y="15" width="9" height="1" fill="#000000"/>'
++'<g><use href="#h-spark" x="-4" y="-2" fill="#FFD700" style="--d:0s"/><use href="#h-spark" x="18" y="-4" fill="#FFA000" style="--d:.3s"/><use href="#h-spark" x="20" y="10" fill="#FFF59D" style="--d:.6s"/><use href="#h-spark" x="-6" y="12" fill="#FFC107" style="--d:.9s"/><use href="#h-spark" x="7" y="-8" fill="#FFF59D" style="--d:1.2s"/><use href="#h-spark" x="-2" y="6" fill="#FFD700" style="--d:.7s"/></g>'
++'<g class="h-bounce"><g fill="#DE886D"><rect x="3" y="13" width="1" height="2"/><rect x="5" y="13" width="1" height="2"/><rect x="9" y="13" width="1" height="2"/><rect x="11" y="13" width="1" height="2"/><rect x="2" y="6" width="11" height="7"/><g class="h-arml"><rect x="0" y="9" width="2" height="2"/></g><g class="h-armr"><rect x="13" y="9" width="2" height="2"/></g></g><g class="h-eyes" fill="#000000"><rect x="4" y="8" width="1" height="2"/><rect x="10" y="8" width="1" height="2"/></g></g></svg>';
+function setMascot(which){if(which===mascotMode)return;const m=document.getElementById('mascot');if(!m)return;m.innerHTML=which==='happy'?CLAWD_HAPPY:CLAWD_TYPING;mascotMode=which;}
 
 const roleCards=document.getElementById('roleCards');
 Object.entries(ROLES).forEach(([k,r])=>{
@@ -438,7 +464,7 @@ otherCard.onclick=()=>{blip();hop();
   if(state.otherOn){document.getElementById('roleOther').focus();}
   else{state.otherText='';document.getElementById('roleOther').value='';}
   renderStep2();renderStep3();
-  say(state.otherOn&&!otherName()?'その他だね！役割を自由に書いてほしいのだ（例：税理士・カスタマーサクセス・製造現場）':roleSay());};
+  say(state.otherOn&&!otherName()?'その他だね！役割を自由に書いてほしいのだ（例：税理士・カスタマーサクセス・製造現場）':roleSay());saveState();};
 roleCards.appendChild(otherCard);
 document.getElementById('roleOther').oninput=e=>{state.otherText=e.target.value;renderStep2();renderStep3();};
 const toolList=document.getElementById('toolList');
@@ -471,7 +497,7 @@ function applyRoleDefaults(){
     r.docs.filter(d=>d.on).forEach(d=>dc.add(d.id));
     state.teams.add(k);});
   state.tetsuban=ts;state.next=new Set();state.docs=dc;
-  renderStep2();renderStep3();
+  renderStep2();renderStep3();saveState();
 }
 function skillRow(s,checked,tag){
   return '<div class="row"><input type="checkbox" '+(checked?'checked':'')+' data-skill="'+s.id+'">'+
@@ -519,7 +545,7 @@ function renderStep3(){
 }
 function go(n){
   if(n>=2&&!hasRole()){alert('先に①で役割を選んでください。');return;}
-  navsfx();
+  navsfx();setMascot('typing');
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',+p.dataset.p===n));
   document.querySelectorAll('.steps .s').forEach(s=>{const sn=+s.dataset.s;s.classList.toggle('active',sn===n);s.classList.toggle('done',implemented.has(sn)&&sn!==n);});
   window.scrollTo({top:0,behavior:'smooth'});
@@ -529,13 +555,16 @@ function toolsAll(){const a=[...state.tools,...state.toolsFree];return a.length?
 function permLine(){const base='破壊系コマンド・機密ファイル読取を deny（固定）';const sel=PERMS.filter(p=>state.perms.has(p.key)).map(p=>p.id);return base+(sel.length?'／'+sel.join('／'):'');}
 function teamLine(){const ts=[...state.teams].map(k=>ROLES[k].team.name+'（'+ROLES[k].team.flow+'）');return ts.length?ts.join(' / '):'今回は作らない（単発エージェント1〜2個から）';}
 function buildP1(){
-  const company=state.company||'（会社名未入力）';
-  const person=state.person||'（お名前未入力）';
+  const company=state.company.trim();
+  const person=state.person.trim();
   const an=state.ainame.trim();
-  const nameLine=an?an:'（任意・未設定。付けたい場合のみ後で命名）';
-  const claudeMdName=an?'CLAUDE.md冒頭に「'+an+'」という名前のAI秘書として'+person+'（'+company+'）を補佐する旨を明記':'CLAUDE.md冒頭に、'+person+'（'+company+'）を補佐するAI秘書である旨を明記（名前は任意。付けたい場合のみ命名）';
+  const companyLine=company||'（未設定・最初のセッションで確認）';
+  const personLine=person||'（未設定・最初のセッションで確認）';
+  const who=person&&company?person+'（'+company+'）':(person||company||'ユーザー');
+  const nameLine=an||'（任意・未設定。付けたい場合のみ後で命名）';
+  const claudeMdName=an?'CLAUDE.md冒頭に「'+an+'」という名前のAI秘書として'+who+'を補佐する旨を明記':'CLAUDE.md冒頭に、'+who+'を補佐するAI秘書である旨を明記（名前は任意。付けたい場合のみ命名）';
   return '【第1部 ガワ：CLAUDE.mdと土台】このファイル（第1部）の手順で進めてください。応答は必ず日本語で。\n'+
-  '- 会社名：'+company+'\n- あなた（ユーザー）：'+person+'\n- AI秘書の呼び名：'+nameLine+'\n- 役割：'+allRoleNames().join('・')+'\n'+
+  '- 会社名：'+companyLine+'\n- あなた（ユーザー）：'+personLine+'\n- AI秘書の呼び名：'+nameLine+'\n- 役割：'+allRoleNames().join('・')+'\n'+
   '- フォルダ構造と CLAUDE.md を作成（'+claudeMdName+'。絶対ルール#1=日本語応答、対外送信は下書き→許可、機密厳守を含める）\n'+
   '- 繋ぐツール：'+toolsAll()+'（コネクタ→CLI→MCPの順）\n'+
   '- 権限：'+permLine()+'\n'+
@@ -573,8 +602,14 @@ function impl(n){
   const host=document.getElementById('out'+n);host.innerHTML=html;
   implemented.add(n);updateXP();hop();
   document.querySelector('.steps .s[data-s="'+n+'"]').classList.add('done');
-  if(implemented.size===3){showToast('★ ALL CLEAR！');maxSfx();say('ぜんステージ制覇なのだ！！🎉');setTimeout(showClear,950);}
-  else{showToast('STAGE '+n+' CLEAR！');clearSfx();say('STAGE'+n+'クリアなのだ！その調子なのだ💪');host.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  if(implemented.size===3){
+    host.insertAdjacentHTML('beforeend','<div class="guidebar"><button class="gbtn fin" onclick="goClear()">▶ 完成画面へ</button></div>');
+    showToast('★ ALL CLEAR！');maxSfx();say('ぜんステージ制覇なのだ！！🎉');setTimeout(showClear,950);
+  } else {
+    var miss=[1,2,3].filter(function(x){return !implemented.has(x);}).map(function(x){return {1:'①ガワ',2:'②能力',3:'③中身'}[x];});
+    host.insertAdjacentHTML('beforeend','<p class="hint" style="margin:10px 0 0">あと <b>'+miss.join('・')+'</b> を実装するとクリア画面に進めます（上の STAGE タブからも移動できます）。</p>');
+    showToast('STAGE '+n+' CLEAR！');clearSfx();say('STAGE'+n+'クリアなのだ！その調子なのだ💪');host.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('show');void t.offsetWidth;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700);}
 const GUIDE_FILES={1:'guide/01_第1部_ガワ_CLAUDEmd構築.md',2:'guide/02_第2部_能力_スキルとエージェント.md',3:'guide/03_第3部_中身_コンテキスト充実.md'};
@@ -594,6 +629,11 @@ function confetti(){const cols=['#1e5ff2','#ffd23f','#3ec46d','#ff6b6b','#9fc0ff
     s.style.left=(Math.random()*100)+'%';s.style.background=cols[i%cols.length];
     s.style.animationDelay=(Math.random()*0.5)+'s';document.body.appendChild(s);
     setTimeout(()=>s.remove(),2700);}}
+function goClear(){
+  var miss=[1,2,3].filter(function(x){return !implemented.has(x);});
+  if(miss.length){var nm={1:'①ガワ',2:'②能力',3:'③中身'};alert('あと '+miss.map(function(x){return nm[x];}).join('・')+' を実装するとクリアです。上の STAGE タブから進めてください。');return;}
+  showClear();
+}
 function showClear(){
   const cp=document.getElementById('clearPanel');
   const company=esc(state.company||'あなたの会社');
@@ -613,11 +653,34 @@ function showClear(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   cp.classList.add('active');
   document.querySelectorAll('.steps .s').forEach(s=>s.classList.add('done'));
-  hop();confetti();
+  setMascot('happy');hop();confetti();
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function resetAll(){location.reload();}
+function resetAll(){try{localStorage.removeItem('aisb_v1');}catch(e){}location.reload();}
+function saveState(){try{localStorage.setItem('aisb_v1',JSON.stringify({company:state.company,person:state.person,ainame:state.ainame,roles:[...state.roles],otherOn:state.otherOn,otherText:state.otherText,tools:[...state.tools],toolsFree:state.toolsFree,perms:[...state.perms]}));}catch(e){}}
+function loadState(){
+  var s;try{s=JSON.parse(localStorage.getItem('aisb_v1')||'null');}catch(e){return;}
+  if(!s)return;
+  state.company=s.company||'';state.person=s.person||'';state.ainame=s.ainame||'';
+  var ci=document.getElementById('company');if(ci)ci.value=state.company;
+  var pi=document.getElementById('person');if(pi)pi.value=state.person;
+  var ai=document.getElementById('ainame');if(ai)ai.value=state.ainame;
+  state.roles=new Set((s.roles||[]).filter(function(k){return ROLES[k];}));
+  document.querySelectorAll('.role-card[data-k]').forEach(function(c){c.classList.toggle('selected',state.roles.has(c.dataset.k));});
+  state.otherOn=!!s.otherOn;state.otherText=s.otherText||'';
+  var oc=document.querySelector('.role-card[data-other]');if(oc)oc.classList.toggle('selected',state.otherOn);
+  var ro=document.getElementById('roleOther');if(ro)ro.value=state.otherText;
+  var rb=document.getElementById('roleOtherBox');if(rb)rb.style.display=state.otherOn?'block':'none';
+  state.tools=new Set(s.tools||[]);
+  document.querySelectorAll('#toolList input').forEach(function(cb,i){if(TOOLS[i])cb.checked=state.tools.has(TOOLS[i].id);});
+  state.toolsFree=s.toolsFree||[];
+  var tf=document.getElementById('toolsFree');if(tf)tf.value=state.toolsFree.join('、');
+  if(s.perms){state.perms=new Set(s.perms);document.querySelectorAll('#permList input').forEach(function(cb,i){if(PERMS[i])cb.checked=state.perms.has(PERMS[i].key);});}
+  applyRoleDefaults();
+}
 document.querySelectorAll('.steps .s').forEach(s=>s.onclick=()=>go(+s.dataset.s));
+document.addEventListener('input',saveState);document.addEventListener('change',saveState);
+loadState();
 renderStep2();renderStep3();
 </script>
 </body>
