@@ -122,6 +122,12 @@
   .teacher{margin-top:14px;background:#fff7d6;border:3px solid #caa400;box-shadow:5px 5px 0 #caa400;
     padding:13px 14px;font-size:13px;color:#6b5200;line-height:1.7;}
   .teacher b{color:#a37e00;font-weight:700;}
+  .learn{margin-top:11px;}
+  .learn summary{cursor:pointer;font-size:12px;font-weight:800;color:#a37e00;list-style:none;}
+  .learn summary::-webkit-details-marker{display:none;}
+  .learn-body{margin-top:7px;font-size:12.5px;color:#6b5200;line-height:1.85;background:#fffdf3;border:2px dashed #caa400;padding:9px 11px;}
+  .learn-body b{color:#a37e00;}
+  .learn-body code{background:#f1e6c0;padding:0 4px;font-size:12px;}
   .note{background:#ffe9e9;border:3px solid var(--coral);box-shadow:4px 4px 0 var(--coral);
     padding:11px 13px;font-size:12px;color:#9c2b2b;margin-top:16px;}
   .toast{position:fixed;top:18px;left:50%;transform:translate(-50%,0);background:var(--yellow);
@@ -148,6 +154,25 @@
   .modal-btns{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
   .modal-btns .danger{background:var(--coral);color:#fff;}
   .modal-btns .danger:hover{background:#e85555;}
+  .demo{margin:14px 0;padding:12px 14px;font-size:13px;}
+  .demo summary{cursor:pointer;font-weight:800;color:var(--blue2);list-style:none;}
+  .demo summary::-webkit-details-marker{display:none;}
+  .demo[open] summary{margin-bottom:10px;}
+  .demo .chat{display:flex;flex-direction:column;gap:8px;}
+  .demo .msg{max-width:88%;padding:8px 11px;font-size:12.5px;line-height:1.7;border:3px solid var(--dark);}
+  .demo .msg.u{align-self:flex-end;background:var(--blue);color:#fff;}
+  .demo .msg.a{align-self:flex-start;background:#fff;color:var(--ink);}
+  .demo .msg .who{display:block;font-size:10px;font-weight:700;opacity:.7;margin-bottom:2px;}
+  .role-card:focus-visible,.steps .s:focus-visible,.mute:focus-visible,.gbtn:focus-visible{outline:3px solid var(--coral);outline-offset:2px;}
+  @media (max-width:520px){
+    body{padding:16px 12px 60px;}
+    header{gap:10px;}
+    header .mascot{width:78px;}
+    header .mascot svg{width:78px;height:auto;}
+    header h1{font-size:21px;}
+    .head-main{padding-right:42px;}
+    .steps .s{font-size:13px;padding:9px 3px;}
+  }
 </style>
 </head>
 <body>
@@ -227,6 +252,14 @@
 
   <div class="banner pbox"><b>すすめかた</b>：① えらぶ → <b>その場でじっそう</b>（動くAI秘書ができる）→ <b>講師が概念を説明</b> → ②③へ</div>
   <div class="banner pbox notice"><b>受講者限定ツール</b>：本ツールは DAIJOBU株式会社 が公開・提供する Claude Code 研修の受講者向けです。関係者以外へのURL共有・再配布はご遠慮ください。</div>
+  <details class="demo pbox"><summary>▼ 完成イメージを見る（朝、AI秘書はこう動きます）</summary>
+    <div class="chat">
+      <div class="msg u"><span class="who">あなた</span>おはよう</div>
+      <div class="msg a"><span class="who">AI秘書</span>おはようございます。今日の工程表です。<br>9:00 メール確認 ／ 9:30 A社の商談準備（前回メモ・資料をまとめておきました）／ 11:00 A社 商談 ／ 13:00 見積ドラフト ／ 15:00 1on1の準備。まず 9:30 の商談準備から始めましょう。</div>
+      <div class="msg u"><span class="who">あなた</span>A社へのお礼メール下書いて</div>
+      <div class="msg a"><span class="who">AI秘書</span>下書きを用意しました（送信はせず、確認をお願いします）。本日はお時間をいただき…という文面でいかがでしょう。</div>
+    </div>
+  </details>
 
   <div class="steps">
     <div class="s active" data-s="1"><small class="pixel">STAGE 1</small>① ガワ</div>
@@ -464,8 +497,9 @@ function setMascot(which){if(which===mascotMode)return;const m=document.getEleme
 
 const roleCards=document.getElementById('roleCards');
 Object.entries(ROLES).forEach(([k,r])=>{
-  const d=document.createElement('div');d.className='role-card';d.dataset.k=k;
+  const d=document.createElement('div');d.className='role-card';d.dataset.k=k;d.tabIndex=0;d.setAttribute('role','button');d.setAttribute('aria-label',r.name+'（役割を選ぶ）');
   d.innerHTML='<span class="picon">'+sprite(SPRITES[k],5)+'</span><span class="nm">'+r.name+'</span>';
+  d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();d.click();}};
   d.onclick=()=>{blip();hop();
     if(state.roles.has(k))state.roles.delete(k);else state.roles.add(k);
     document.querySelectorAll('.role-card[data-k]').forEach(c=>c.classList.toggle('selected',state.roles.has(c.dataset.k)));
@@ -473,8 +507,9 @@ Object.entries(ROLES).forEach(([k,r])=>{
     say(roleSay());};
   roleCards.appendChild(d);
 });
-const otherCard=document.createElement('div');otherCard.className='role-card';otherCard.dataset.other='1';
+const otherCard=document.createElement('div');otherCard.className='role-card';otherCard.dataset.other='1';otherCard.tabIndex=0;otherCard.setAttribute('role','button');otherCard.setAttribute('aria-label','その他（役割を自由入力）');
 otherCard.innerHTML='<span class="picon">'+sprite(SPRITES.other,5)+'</span><span class="nm">その他</span>';
+otherCard.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();otherCard.click();}};
 otherCard.onclick=()=>{blip();hop();
   state.otherOn=!state.otherOn;
   otherCard.classList.toggle('selected',state.otherOn);
@@ -612,6 +647,11 @@ const TEACHER={
   2:'<b>このあと講師が概念を説明します。</b>いま作ったスキルと Agent Team を題材に、スキル（スラッシュコマンド）が description でどう自動起動するか・なぜ Gotchas を書くか・いつチームに任せるかを解説します。自分の役割の鉄板を動かしたあとなので腹落ちしやすいはずです。聞き終わったら ③ 中身 に進みましょう。',
   3:'<b>このあと講師が概念を説明します。</b>いま入れたコンテキスト（context/）を題材に、なぜ自社の事実を持たせると回答が変わるか・ストック（事実）とフロー（ログ）の分け方・使うほど賢くなる仕組みを解説します。「自社が分かる」状態を見たあとなので腹落ちしやすいはずです。聞き終わったら右下の「次へ」で完成画面へ進みましょう。'
 };
+const LEARN={
+  1:'<details class="learn"><summary>▼ 自分で読む（90秒・講師がいなくてもOK）</summary><div class="learn-body"><b>CLAUDE.md</b> はAIの就業規則。事業概要・絶対ルール（日本語で答える／送信前に下書き／機密厳守）を書くと、AIは毎回それに従って動きます。<b>スキル</b>は「よく使う作業」のショートカット（例：<code>/daily-schedule</code> で朝の工程表）。<b>コンテキスト（context/）</b>は自社の事実の置き場。この3つで「自社が分かるAI秘書」になります。</div></details>',
+  2:'<details class="learn"><summary>▼ 自分で読む（90秒・講師がいなくてもOK）</summary><div class="learn-body"><b>スキル</b>は「/名前」で呼ぶショートカット。frontmatter の description に「どんな時に使うか」を書くと、その場面で自動的に立ち上がります。<b>Gotchas</b> は過去の失敗を1行で残すメモ（同じミスを防ぐ）。<b>Agent Team</b> は重い仕事を複数AIで分担する編成（例：提案書を リサーチ→競合→設計→執筆→レビュー）。まずは単発スキルから、慣れたらチーム。</div></details>',
+  3:'<details class="learn"><summary>▼ 自分で読む（90秒・講師がいなくてもOK）</summary><div class="learn-body"><b>context/</b> は自社の事実を入れる場所。ここが埋まるほど、一般論でなく「自社を分かった」回答になります。コツは <b>ストック</b>（今の正しい状態・上書きで最新に）と <b>フロー</b>（議事録やログ・追記でためる）を分けること。最初は事業概要・主要顧客・よく使う書式から。使うほど事実が増えて賢くなります。</div></details>'
+};
 function impl(n){
   if(!hasRole()){alert('先に①で役割を選んでください。');return;}
   let html='<div class="result-block"><div class="rb-h"><span class="badge pixel">第'+n+'部</span>セットができました！DLして Claude Code に渡すだけ</div>'+
@@ -620,7 +660,7 @@ function impl(n){
     '<button class="gbtn dl" onclick="downloadBundle('+n+',this)">⬇ 第'+n+'部セットをDL（手順＋決定）</button>'+
     '</div></div>';
   if(TEACHER[n]){
-    html+='<div class="teacher">'+TEACHER[n]+'</div>';
+    html+='<div class="teacher">'+TEACHER[n]+(LEARN[n]||'')+'</div>';
   }
   const host=document.getElementById('out'+n);host.innerHTML=html;
   implemented.add(n);updateXP();hop();
@@ -703,7 +743,7 @@ function loadState(){
   if(s.perms){state.perms=new Set(s.perms);document.querySelectorAll('#permList input').forEach(function(cb,i){if(PERMS[i])cb.checked=state.perms.has(PERMS[i].key);});}
   applyRoleDefaults();
 }
-document.querySelectorAll('.steps .s').forEach(s=>s.onclick=()=>go(+s.dataset.s));
+document.querySelectorAll('.steps .s').forEach(function(s){s.onclick=function(){go(+s.dataset.s);};s.tabIndex=0;s.setAttribute('role','button');s.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();go(+s.dataset.s);}};});
 document.addEventListener('input',saveState);document.addEventListener('change',saveState);
 loadState();
 renderStep2();renderStep3();
