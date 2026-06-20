@@ -607,6 +607,11 @@ function buildP3(){
   '- 最後に自社理解度スコアを提示し、次に足すと効く資料を案内\n'+
   '- 機密（顧客名・金額・個人情報）は context/ に入れても外部送信物には出さない';
 }
+const TEACHER={
+  1:'<b>このあと講師が概念を説明します。</b>いま立ち上げた「動くAI秘書」を題材に、CLAUDE.md・スキル・コンテキストが何なのかを解説します。実物を動かしたあとなので、すっと腹落ちするはずです。聞き終わったら ② 能力 に進みましょう。',
+  2:'<b>このあと講師が概念を説明します。</b>いま作ったスキルと Agent Team を題材に、スキル（スラッシュコマンド）が description でどう自動起動するか・なぜ Gotchas を書くか・いつチームに任せるかを解説します。自分の役割の鉄板を動かしたあとなので腹落ちしやすいはずです。聞き終わったら ③ 中身 に進みましょう。',
+  3:'<b>このあと講師が概念を説明します。</b>いま入れたコンテキスト（context/）を題材に、なぜ自社の事実を持たせると回答が変わるか・ストック（事実）とフロー（ログ）の分け方・使うほど賢くなる仕組みを解説します。「自社が分かる」状態を見たあとなので腹落ちしやすいはずです。聞き終わったら右下の「次へ」で完成画面へ進みましょう。'
+};
 function impl(n){
   if(!hasRole()){alert('先に①で役割を選んでください。');return;}
   let html='<div class="result-block"><div class="rb-h"><span class="badge pixel">第'+n+'部</span>セットができました！DLして Claude Code に渡すだけ</div>'+
@@ -614,8 +619,8 @@ function impl(n){
     '<div class="guidebar">'+
     '<button class="gbtn dl" onclick="downloadBundle('+n+',this)">⬇ 第'+n+'部セットをDL（手順＋決定）</button>'+
     '</div></div>';
-  if(n===1){
-    html+='<div class="teacher"><b>このあと講師が概念を説明します。</b>いま立ち上げた「動くAI秘書」を題材に、CLAUDE.md・スキル・コンテキストが何なのかを解説します。実物を動かしたあとなので、すっと腹落ちするはずです。聞き終わったら ② 能力 に進みましょう。</div>';
+  if(TEACHER[n]){
+    html+='<div class="teacher">'+TEACHER[n]+'</div>';
   }
   const host=document.getElementById('out'+n);host.innerHTML=html;
   implemented.add(n);updateXP();hop();
