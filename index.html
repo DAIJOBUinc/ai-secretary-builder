@@ -301,7 +301,7 @@
       <div class="out" id="out3"></div>
     </div>
     <div class="note">このアプリは決定を集めて指示文を作るだけ。実際の構築・context注入は Claude Code が行います。</div>
-    <div class="nav"><button onclick="go(2)">◀ もどる</button><button onclick="resetAll()">↺ リセット</button></div>
+    <div class="nav"><button onclick="go(2)">◀ もどる</button><button onclick="goClear()">次へ ▶</button></div>
   </section>
 
   <section class="panel pbox" data-p="4" id="clearPanel"></section>
@@ -603,13 +603,13 @@ function impl(n){
   implemented.add(n);updateXP();hop();
   document.querySelector('.steps .s[data-s="'+n+'"]').classList.add('done');
   if(implemented.size===3){
-    host.insertAdjacentHTML('beforeend','<div class="guidebar"><button class="gbtn fin" onclick="goClear()">▶ 完成画面へ</button></div>');
-    showToast('★ ALL CLEAR！');maxSfx();say('ぜんステージ制覇なのだ！！🎉');setTimeout(showClear,950);
+    showToast('★ ALL CLEAR！');maxSfx();say('ぜんステージ制覇なのだ！！🎉 DLしたら右下の「次へ」で完成画面なのだ');
   } else {
     var miss=[1,2,3].filter(function(x){return !implemented.has(x);}).map(function(x){return {1:'①ガワ',2:'②能力',3:'③中身'}[x];});
     host.insertAdjacentHTML('beforeend','<p class="hint" style="margin:10px 0 0">あと <b>'+miss.join('・')+'</b> を実装するとクリア画面に進めます（上の STAGE タブからも移動できます）。</p>');
-    showToast('STAGE '+n+' CLEAR！');clearSfx();say('STAGE'+n+'クリアなのだ！その調子なのだ💪');host.scrollIntoView({behavior:'smooth',block:'nearest'});
+    showToast('STAGE '+n+' CLEAR！');clearSfx();say('STAGE'+n+'クリアなのだ！その調子なのだ💪');
   }
+  host.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('show');void t.offsetWidth;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1700);}
 const GUIDE_FILES={1:'guide/01_第1部_ガワ_CLAUDEmd構築.md',2:'guide/02_第2部_能力_スキルとエージェント.md',3:'guide/03_第3部_中身_コンテキスト充実.md'};
