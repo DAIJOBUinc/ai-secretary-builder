@@ -99,6 +99,8 @@
     margin-bottom:8px;background:var(--white);}
   .row.fixed{background:#eef3ff;}
   .row input[type=checkbox]{margin-top:3px;width:16px;height:16px;accent-color:var(--blue);flex:0 0 auto;}
+  .row.tool{align-items:center;}
+  .row.tool input[type=checkbox]{margin-top:0;}
   .row .meta{flex:1;}
   .row .id{font-size:13px;font-weight:700;color:var(--deep);}
   .row .desc{font-size:12px;color:var(--sub);line-height:1.6;font-weight:400;}
@@ -540,7 +542,7 @@ roleCards.appendChild(otherCard);
 document.getElementById('roleOther').oninput=e=>{state.otherText=e.target.value;renderStep2();renderStep3();};
 const toolList=document.getElementById('toolList');
 TOOLS.forEach((t)=>{
-  const row=document.createElement('div');row.className='row';
+  const row=document.createElement('div');row.className='row tool';
   row.innerHTML='<input type="checkbox" '+(t.on?'checked':'')+'><div class="meta"><span class="id">'+t.id+'</span></div>';
   toolList.appendChild(row);
   if(t.on)state.tools.add(t.id);
